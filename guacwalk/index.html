@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="icon" type="image/png" href="guacicon.png"/>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-34819223-7"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-34819223-7');
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=7.5, minimum-scale=1, user-scalable=yes">
+  <meta property="og:title" content="Guac Walk 2020!">
+  <meta property="og:description" content="Back for a 9th year we'll be celebrating with by going on an adventure!">
+  <meta property="og:image" content="https://i.imgur.com/AfCRlie.png">
+  <meta property="twitter:image" content="https://i.imgur.com/AfCRlie.png">
+  <meta property="twitter:title" content="Guac Walk 2020!">
+  <meta property="twitter:description" content="Back for a 9th year we'll be celebrating with by going on an adventure!">
+  <meta name="twitter:card" content='summary_large_image'>
+  <meta name="twitter:label1" content="When is it?">
+  <meta name="twitter:data1" content="Now until it's gone">
+  <meta name="twitter:label2" content="Should I bring my walking shoes?">
+  <meta name="twitter:data2" content="Absolutely!">
+  <link rel="stylesheet" type="text/css" href="stylesheet.css">
+
+  <title>GuacWalk 2020</title>
+</head>
+<body>
+  <div id="map"><img src="map.png" alt="mysterious map"/></div>
+  <div class='wrap'>
+    <div class='content'>
+      <h2>Well hello!</h2>
+      <p>This is normally about the time we’d be gathering together to enjoy the almighty avocado.</p>
+      <p>But these are not normal times, and gathering with friends and neighbors to share countless varieties of guacamole together seems to be just about the most dangerous thing we could be doing right now. And this year, that’s really saying something.</p>
+      <p>We did create something for you though. We couldn’t help it.</p>
+      <p>So we made you a treasure map to help you find it.</p>
+      <p>Join us for a socially distant adventure. It’s a scavenger hunt of the most tasty variety. And much like past Guac-Off’s, we hope you’ll find it to be filled with hillside gardens, hidden delights, and a renewed sense of why we call this place home.</p>
+      <p>It’s as unexpected as an ice cream guacamole, and we hope you’ll find it to be equally delicious.</p>
+      <a href="mailto:missionguacparty@gmail.com" target="_blank">Chat with us</a>
+    </div>
+  </div>
+  <a id="huh" href='#'>Huh?</a>
+
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/1.11.6/utils/Draggable.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/1.11.5/TweenMax.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/kineticjs/4.6.0/kinetic.min.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script>$('#huh').on('click', function(){
+    $('.wrap, a').toggleClass('active');    
+    var link = document.getElementById('huh');
+
+    if (link.innerHTML === 'Huh?') link.innerHTML = 'Treasure map';
+      else {
+        link.innerHTML = 'Huh?';
+      }
+    return false;
+  });</script>
+  <script>
+    if (screen.width > 960) {
+      Draggable.create("#map img", {type: "rotation", inertia: true})
+    }
+    else {
+      var img_path = 'map.png';
+      var viewport_width  = 400;
+      var viewport_height = 800;
+      var img_width  = 800;
+      var img_height = 800;
+      var offset_width = img_width / 2;
+      var offset_height = img_height / 2;
+      var pos = {};
+      var last_dist = 0;
+      
+      // Create instances
+      var stage = new Kinetic.Stage({
+        container: 'map',
+        width: viewport_width,
+        height: viewport_height
+      });
+      var image = new Image();
+      var imageLayer = new Kinetic.Layer({
+        x: 150,
+        y: 150,
+        draggable: true,
+        offset: [offset_width, offset_height]
+      });
+      stage.draw();
+      image.src = img_path;
+      
+      // Load picture
+      image.onload = function() {
+        var logoImg = new Kinetic.Image({
+          x: 0,
+          y: 0,
+          image: this,
+          width: img_width,
+          height: img_height
+        });
+        imageLayer.add(logoImg);
+        stage.add(imageLayer);
+        imageLayer.draw();
+      };
+      
+      // Add multi-touch zoom and rotation
+      stage.getContent().addEventListener('touchstart', function(evt) {
+        pos.start  = getXYfromEvent(evt);
+        init_angle = imageLayer.getRotationDeg();
+      });
+      stage.getContent().addEventListener('touchmove', function(evt) {
+        var touch1 = evt.touches[0];
+        var touch2 = evt.touches[1];
+
+        if (touch1 && touch2) {
+          var dist;
+          var scale;
+          var rotate;
+
+          pos.move = getXYfromEvent(evt);
+          rotate = init_angle + getRotation(pos.start, pos.move);
+          imageLayer.setRotationDeg(rotate);
+          dist = getDistance({
+            x: touch1.clientX,
+            y: touch1.clientY
+          }, {
+            x: touch2.clientX,
+            y: touch2.clientY
+          });
+          if(!last_dist) {
+            last_dist = dist;
+          }
+          scale = imageLayer.getScale().x * dist / last_dist;
+          imageLayer.setScale(scale);
+          imageLayer.draw();
+          last_dist = dist;
+        }
+      }, false);
+      stage.getContent().addEventListener('touchend', function() {
+        last_dist = 0;
+      }, false);
+      
+      // Get the distance between two fingers
+      function getDistance(p1, p2) {
+        return Math.sqrt(Math.pow((p2.x - p1.x), 2) + Math.pow((p2.y - p1.y), 2));
+      }
+
+      // Get the angle of rotation made by two fingers
+      function getRotation(pos_start, pos_move) {
+        if (pos_start.length == 2 && pos_move.length == 2) {
+          var x, y;
+
+          x = pos_start[0].x - pos_start[1].x;
+          y = pos_start[0].y - pos_start[1].y;
+          var start_rotation = Math.atan2(y, x) * 180 / Math.PI;
+
+          x = pos_move[0].x - pos_move[1].x;
+          y = pos_move[0].y - pos_move[1].y;
+          var end_rotation = Math.atan2(y, x) * 180 / Math.PI;
+
+          return end_rotation - start_rotation;
+        }
+        return 0;
+      }
+
+      /**
+      * get the x and y positions from the event object
+      * @param  event
+      * @return array  [{ x: int, y: int }]
+      */
+      function getXYfromEvent(event) {
+        event = event || window.event;
+        var pos = [], src;
+        for(var t = 0, len = event.touches.length; t < len; t++) {
+          src = event.touches[t];
+          pos.push({x: src.pageX, y: src.pageY});
+        }
+        return pos;
+      };
+    }
+  </script>
+</body>
+</html>

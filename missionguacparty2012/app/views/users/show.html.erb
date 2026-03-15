@@ -1,0 +1,13 @@
+<% provide(:title, @user.name) %>
+<div class="row">
+  <aside class="row">
+    <section>
+      <h5>
+      Need a Guacamole receipe? <%= link_to "Here are a whole bunch!", "http://tinyurl.com/97wyo5b" %>
+      </h5>
+      <center>
+        <%= "Thanks for letting us know that you're going to try to stop by!  We'll email you a friendly remider on Saturday morning #{@user.name}!" %>
+      </center>
+    </section>
+  </aside>
+</div>

@@ -1,0 +1,35 @@
+<div class="center hero-unit">
+<% provide(:title, 'Sign up') %>
+<h5>
+  Non-Committal Sign Up
+</h5>
+
+<div class="center">
+  <div id="instructions">
+    <%= form_for(@user) do |f| %>
+
+      <%= f.label "Name" %>
+      <%= f.text_field :name %>
+
+      <%= f.label "Email" %>
+      <%= f.text_field :email %>
+
+      <%= f.label "Guacamole" %>
+      <%= f.check_box :guac %>
+
+      <%= f.label "Beverages" %>
+      <%= f.check_box :beer %>
+      
+      <%= f.label "Other" %>
+      <%= f.check_box :other %>
+      <br>
+      <br>
+      <%= f.submit "See you then!", class: "btn btn-large btn-primary" %>
+    <% end %>
+  </div>
+
+  <h4 id="contact">
+    <p>
+      Questions? Call or tweet <%= link_to "@lspray", "https://twitter.com/lspray" %></li>
+    </p>
+</div>
