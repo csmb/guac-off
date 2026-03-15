@@ -1,6 +1,6 @@
 # Guac Off
 
-An archive of code from many years of the **Mission Guac Party** and **SF Guac Off** — an annual guacamole competition in San Francisco, running since 2012.
+An archive of code from many years of the **Guac Off** — an annual guacamole competition in San Francisco, running since 2012.
 
 ## Projects
 
