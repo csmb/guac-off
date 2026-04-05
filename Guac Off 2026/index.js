@@ -5,20 +5,24 @@ const ctx = canvas.getContext('2d');
 // CONFIGURATION (Edit this easily!)
 // ==========================================
 const billboardStyles = {
-    bgColor: '#39ff14',      // Background color of the sign
-    borderColor: '#000000',  // Border color
-    textColor: '#000000',     // Text color
+    bgColor: '#4a2c11',      // Dark brown wood
+    borderColor: '#2d1a0a',  // Darker brown wood
+    textColor: '#ffd700',     // Yellow text
     titleSize: 100,          // Font size for title
     detailsSize: 60          // Font size for details
 };
 
 const billboards = [
-    { z: 4000, text: 'SF GUAC OFF 2026', details: 'The Ultimate Guac Showdown', side: 'left' },
-    { z: 12000, text: 'WHEN: SATURDAY NIGHT', details: 'Bring your best chips.', side: 'right' },
-    { z: 20000, text: 'WHERE: SECRET MISSION', details: 'Location revealed soon.', side: 'left' },
-    { z: 28000, text: 'NO DOUBLE DIPPING', details: 'Strict rules apply.', side: 'right' },
-    { z: 36000, text: 'BYOB', details: 'Bring Your Own Bowl', side: 'left' },
-    { z: 44000, text: 'BE THERE!', details: 'Guac on.', side: 'right' }
+    { z: 10000, text: 'SF GUAC OFF 2026', details: 'The Ultimate Guac Showdown', side: 'left' },
+    { z: 30000, text: 'WHEN: SEPT 13, 2026', details: '1PM.', side: 'right' },
+    { z: 50000, text: 'WHERE: ????', details: 'Location revealed soon.', side: 'left' },
+    { z: 70000, text: 'NO DOUBLE DIPPING', details: '', side: 'right' },
+    { z: 90000, text: 'BYOF', details: 'Bring Your Old Friends', side: 'right' },
+    { z: 110000, text: 'BYOB', details: 'Bring Your Own Bowl', side: 'left' },
+    { z: 130000, text: 'BE THERE!', details: 'Guac on.', side: 'right' },
+    { z: 150000, text: 'SITE UNDER CONSTRUCTION', details: 'Watch your step.', side: 'left' },
+    { z: 170000, text: 'DIGGING IN PROGRESS', details: 'Guac is hard work.', side: 'right' },
+    { z: 190000, text: 'COMING SOON', details: 'Full site loading.', side: 'left' }
 ];
 
 // Golden Gate Bridge Position
@@ -42,13 +46,15 @@ const width = canvas.width;
 const height = canvas.height;
 
 // Load assets
-const bikeImg = new Image();
-bikeImg.src = 'assets/bike.png';
+const bikePedalingImg = new Image();
+bikePedalingImg.src = 'assets/bike_pedaling.png';
+const bikeStoppedImg = new Image();
+bikeStoppedImg.src = 'assets/bike_stopped.png';
 const bgImg = new Image();
 bgImg.src = 'assets/bg.png';
 
 let assetsLoaded = 0;
-const totalAssets = 2;
+const totalAssets = 3;
 
 function assetLoaded() {
     assetsLoaded++;
@@ -57,11 +63,13 @@ function assetLoaded() {
     }
 }
 
-bikeImg.onload = assetLoaded;
+bikePedalingImg.onload = assetLoaded;
+bikeStoppedImg.onload = assetLoaded;
 bgImg.onload = assetLoaded;
 
 // Game State
 let position = 0;
+let paused = false;
 let playerX = 0; // -1 to 1
 let targetPlayerX = 0;
 const roadWidth = 2000;
@@ -129,6 +137,12 @@ function project(p, width, height) {
     p.screenY = (height / 2) + (cameraHeight - p.y) * sp * (height / 2);
     p.screenWidth = roadWidth * sp * (width / 2);
 }
+function handleScroll() {
+    position = window.scrollY * 10;
+    if (position > (segments.length - drawDistance) * segmentLength) {
+        position = (segments.length - drawDistance) * segmentLength;
+    }
+}
 
 // Init
 function init() {
@@ -151,11 +165,18 @@ function init() {
     });
     
     // Scroll interaction for progression
-    window.addEventListener('scroll', () => {
-        position = window.scrollY * 10;
-        if (position > (segments.length - drawDistance) * segmentLength) {
-            position = (segments.length - drawDistance) * segmentLength;
+    window.addEventListener('scroll', handleScroll);
+    
+    // Pause interaction
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            paused = !paused;
+            e.preventDefault(); // Prevent page scroll
         }
+    });
+
+    window.addEventListener('click', () => {
+        paused = !paused;
     });
 
     requestAnimationFrame(gameLoop);
@@ -174,40 +195,89 @@ function render() {
     const startIndex = Math.floor(position / segmentLength);
     const maxSegments = Math.min(segments.length, startIndex + drawDistance);
     
-    // Draw road back to front
+    // Pass 1: Draw grass from back to front
+    for (let n = maxSegments - 1; n >= startIndex; n--) {
+        const segment = segments[n];
+        if (segment.isBridge) continue;
+        
+        let p1 = segment.p1;
+        let p2 = segment.p2;
+        
+        if (n === startIndex) {
+            p1 = Object.assign({}, segment.p1);
+            p1.z = position + 1;
+            const t = (p1.z - segment.p1.z) / (segment.p2.z - segment.p1.z);
+            p1.y = segment.p1.y + (segment.p2.y - segment.p1.y) * t;
+        }
+        
+        project(p1, width, height);
+        project(p2, width, height);
+        
+        if (p2.screenY < height) {
+            ctx.fillStyle = Math.floor(n / 3) % 2 ? '#4ca127' : '#3d821e';
+            
+            // Left grass
+            ctx.beginPath();
+            ctx.moveTo(0, p1.screenY);
+            ctx.lineTo(p1.screenX - p1.screenWidth, p1.screenY);
+            ctx.lineTo(p2.screenX - p2.screenWidth, p2.screenY - 1);
+            ctx.lineTo(0, p2.screenY - 1);
+            ctx.fill();
+            
+            // Right grass
+            ctx.beginPath();
+            ctx.moveTo(p1.screenX + p1.screenWidth, p1.screenY);
+            ctx.lineTo(width, p1.screenY);
+            ctx.lineTo(width, p2.screenY - 1);
+            ctx.lineTo(p2.screenX + p2.screenWidth, p2.screenY - 1);
+            ctx.fill();
+        }
+    }
+
+    // Pass 2: Draw road, rumble, billboards from back to front
     for (let n = maxSegments - 1; n >= startIndex; n--) {
         const segment = segments[n];
         
-        project(segment.p1, width, height);
-        project(segment.p2, width, height);
+        let p1 = segment.p1;
+        let p2 = segment.p2;
         
-        if (segment.p1.screenY > segment.p2.screenY && segment.p1.screenY < height) {
+        if (n === startIndex) {
+            p1 = Object.assign({}, segment.p1);
+            p1.z = position + 1;
+            const t = (p1.z - segment.p1.z) / (segment.p2.z - segment.p1.z);
+            p1.y = segment.p1.y + (segment.p2.y - segment.p1.y) * t;
+        }
+        
+        project(p1, width, height);
+        project(p2, width, height);
+        
+        if (p2.screenY < height) {
             // Draw road
             ctx.fillStyle = segment.color;
             ctx.beginPath();
-            ctx.moveTo(segment.p1.screenX - segment.p1.screenWidth, segment.p1.screenY);
-            ctx.lineTo(segment.p1.screenX + segment.p1.screenWidth, segment.p1.screenY);
-            ctx.lineTo(segment.p2.screenX + segment.p2.screenWidth, segment.p2.screenY);
-            ctx.lineTo(segment.p2.screenX - segment.p2.screenWidth, segment.p2.screenY);
+            ctx.moveTo(p1.screenX - p1.screenWidth, p1.screenY);
+            ctx.lineTo(p1.screenX + p1.screenWidth, p1.screenY);
+            ctx.lineTo(p2.screenX + p2.screenWidth, p2.screenY - 1);
+            ctx.lineTo(p2.screenX - p2.screenWidth, p2.screenY - 1);
             ctx.fill();
             
             // Draw rumble strips
             ctx.fillStyle = segment.rumble;
-            const rumble1 = segment.p1.screenWidth * 0.1;
-            const rumble2 = segment.p2.screenWidth * 0.1;
+            const rumble1 = p1.screenWidth * 0.1;
+            const rumble2 = p2.screenWidth * 0.1;
             
             ctx.beginPath();
-            ctx.moveTo(segment.p1.screenX - segment.p1.screenWidth, segment.p1.screenY);
-            ctx.lineTo(segment.p1.screenX - segment.p1.screenWidth + rumble1, segment.p1.screenY);
-            ctx.lineTo(segment.p2.screenX - segment.p2.screenWidth + rumble2, segment.p2.screenY);
-            ctx.lineTo(segment.p2.screenX - segment.p2.screenWidth, segment.p2.screenY);
+            ctx.moveTo(p1.screenX - p1.screenWidth, p1.screenY);
+            ctx.lineTo(p1.screenX - p1.screenWidth + rumble1, p1.screenY);
+            ctx.lineTo(p2.screenX - p2.screenWidth + rumble2, p2.screenY - 1);
+            ctx.lineTo(p2.screenX - p2.screenWidth, p2.screenY - 1);
             ctx.fill();
             
             ctx.beginPath();
-            ctx.moveTo(segment.p1.screenX + segment.p1.screenWidth, segment.p1.screenY);
-            ctx.lineTo(segment.p1.screenX + segment.p1.screenWidth - rumble1, segment.p1.screenY);
-            ctx.lineTo(segment.p2.screenX + segment.p2.screenWidth - rumble2, segment.p2.screenY);
-            ctx.lineTo(segment.p2.screenX + segment.p2.screenWidth, segment.p2.screenY);
+            ctx.moveTo(p1.screenX + p1.screenWidth, p1.screenY);
+            ctx.lineTo(p1.screenX + p1.screenWidth - rumble1, p1.screenY);
+            ctx.lineTo(p2.screenX + p2.screenWidth - rumble2, p2.screenY - 1);
+            ctx.lineTo(p2.screenX + p2.screenWidth, p2.screenY - 1);
             ctx.fill();
             
             // Check for billboards at this segment
@@ -226,12 +296,20 @@ function render() {
     // Draw Bike (center bottom)
     playerX += (targetPlayerX - playerX) * 0.1;
     
-    const bikeW = 200;
-    const bikeH = 200;
+    const bikeW = 400;
+    const bikeH = 400;
     const bikeX = (width / 2) - (bikeW / 2) + (playerX * 100);
     const bikeY = height - bikeH - 20;
     
-    ctx.drawImage(bikeImg, bikeX, bikeY, bikeW, bikeH);
+    // Calculate lean angle based on turning steering delta
+    const leanAngle = (targetPlayerX - playerX) * 0.3;
+    
+    ctx.save();
+    ctx.translate(bikeX + bikeW / 2, bikeY + bikeH); // Pivot from bottom center (wheels)
+    ctx.rotate(leanAngle);
+    const currentBikeImg = paused ? bikeStoppedImg : bikePedalingImg;
+    ctx.drawImage(currentBikeImg, -bikeW / 2, -bikeH, bikeW, bikeH);
+    ctx.restore();
 }
 
 function drawBillboard(ctx, segment, billboard) {
@@ -256,7 +334,7 @@ function drawBillboard(ctx, segment, billboard) {
     ctx.strokeRect(x, y, w, h);
     
     // Draw pole
-    ctx.fillStyle = '#ff007f'; // Keep neon pink pole
+    ctx.fillStyle = '#2d1a0a'; // Dark wood pole
     ctx.fillRect(x + w/2 - 15*scale, y + h, 30*scale, segment.p1.screenY - y - h);
     
     // Draw text
@@ -317,6 +395,19 @@ function drawBridgeTower(ctx, segment) {
 }
 
 function gameLoop() {
+    if (!paused) {
+        // Auto drive
+        position += 100; // Speed
+        if (position >= segments.length * segmentLength) {
+            position = 0;
+        }
+        
+        // Sync scrollbar without triggering event
+        window.removeEventListener('scroll', handleScroll);
+        window.scrollTo(0, position / 10);
+        window.addEventListener('scroll', handleScroll);
+    }
+    
     render();
     requestAnimationFrame(gameLoop);
 }
