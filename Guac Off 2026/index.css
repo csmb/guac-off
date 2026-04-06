@@ -188,3 +188,92 @@ body {
 .content-box ul::-webkit-scrollbar-thumb:hover {
   background: var(--accent-color);
 }
+
+.menu-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(13, 2, 33, 0.9);
+  border: 4px solid var(--text-color);
+  box-shadow: 0 0 20px var(--text-color), 0 0 40px var(--accent-color);
+  padding: 40px;
+  text-align: center;
+  z-index: 1000;
+  max-width: 500px;
+  width: 90%;
+  font-family: var(--font-body);
+}
+
+.menu-overlay h1 {
+  font-family: var(--font-title);
+  font-size: 24px;
+  color: var(--secondary-color);
+  text-shadow: 3px 3px 0px var(--text-color);
+  margin-bottom: 30px;
+}
+
+.menu-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.menu-group label {
+  font-family: var(--font-title);
+  font-size: 14px;
+  color: var(--accent-color);
+  margin-bottom: 10px;
+}
+
+.menu-overlay select {
+  font-family: var(--font-body);
+  font-size: 24px;
+  background: #000;
+  color: #fff;
+  border: 2px solid var(--accent-color);
+  padding: 10px;
+  width: 80%;
+  text-align: center;
+}
+
+.menu-overlay button {
+  margin-top: 20px;
+  padding: 15px 30px;
+  font-family: var(--font-title);
+  font-size: 18px;
+  background: var(--text-color);
+  color: #fff;
+  border: none;
+  box-shadow: 4px 4px 0px var(--accent-color);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.menu-overlay button:hover {
+  background: var(--secondary-color);
+  color: #000;
+  box-shadow: 2px 2px 0px #fff;
+  transform: translate(2px, 2px);
+}
+
+.music-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid var(--accent-color);
+  color: var(--accent-color);
+  font-family: var(--font-title);
+  font-size: 10px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 3px 3px 0px var(--text-color);
+}
+
+.music-toggle:hover {
+  background: var(--accent-color);
+  color: #000;
+}

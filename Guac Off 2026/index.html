@@ -9,7 +9,31 @@
 <body>
     <div class="game-container">
         <canvas id="game-canvas"></canvas>
-        
+        <button id="music-toggle" class="music-toggle">🎵 Music: ON</button>
+        <div id="menu-overlay" class="menu-overlay">
+            <h1>SF GUAC OFF 2026</h1>
+            <div class="menu-group">
+                <label>Vehicle</label>
+                <select id="vehicle-select">
+                    <option value="bike">Vintage Bike</option>
+                    <option value="waymo">Waymo</option>
+                    <option value="motorcycle">Motorcycle</option>
+                    <option value="scooter">Lime Scooter</option>
+                </select>
+            </div>
+            <div class="menu-group">
+                <label>Road</label>
+                <select id="road-select">
+                    <option value="mttam">Mt. Tam</option>
+                    <option value="mission">SF Mission</option>
+                    <option value="ggp">Golden Gate Park</option>
+                    <option value="market">Market Street</option>
+                    <option value="custom">Upload your own</option>
+                </select>
+                <input type="file" id="bg-upload" accept="image/*" style="display: none;">
+            </div>
+            <button id="start-btn">START RIDE</button>
+        </div>
         <div class="ui-layer">
             <!-- UI removed as per user request -->
         </div>

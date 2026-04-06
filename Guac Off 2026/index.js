@@ -25,13 +25,6 @@ const billboards = [
     { z: 190000, text: 'COMING SOON', details: 'Full site loading.', side: 'left' }
 ];
 
-// Golden Gate Bridge Position
-const bridgeConfig = {
-    startZ: 16000,
-    endZ: 26000,
-    towers: [18000, 24000],
-    color: '#c0362c' // International Orange
-};
 // ==========================================
 
 // Set canvas to full screen
@@ -50,26 +43,98 @@ const bikePedalingImg = new Image();
 bikePedalingImg.src = 'assets/bike_pedaling.png';
 const bikeStoppedImg = new Image();
 bikeStoppedImg.src = 'assets/bike_stopped.png';
-const bgImg = new Image();
-bgImg.src = 'assets/bg.png';
+const waymoImg = new Image();
+waymoImg.src = 'assets/waymo.png';
+const waymoStoppedImg = new Image();
+waymoStoppedImg.src = 'assets/waymo_stopped.png';
+const motorcycleImg = new Image();
+motorcycleImg.src = 'assets/motorcycle.png';
+const motorcycleStoppedImg = new Image();
+motorcycleStoppedImg.src = 'assets/motorcycle_stopped.png';
+const scooterImg = new Image();
+scooterImg.src = 'assets/lime_scooter.png';
+const scooterStoppedImg = new Image();
+scooterStoppedImg.src = 'assets/scooter_stopped.png';
+
+const bgMtTam = new Image();
+bgMtTam.src = 'assets/bg.png';
+const bgMission = new Image();
+bgMission.src = 'assets/bg_mission.png';
+const bgGGP = new Image();
+bgGGP.src = 'assets/bg_ggp.png';
+const bgMarketStreet = new Image();
+bgMarketStreet.src = 'assets/bg_market_street.png';
 
 let assetsLoaded = 0;
-const totalAssets = 3;
+const totalAssets = 12;
 
 function assetLoaded() {
     assetsLoaded++;
     if (assetsLoaded === totalAssets) {
-        init();
+        document.getElementById('menu-overlay').style.display = 'block';
     }
 }
 
 bikePedalingImg.onload = assetLoaded;
 bikeStoppedImg.onload = assetLoaded;
-bgImg.onload = assetLoaded;
+waymoImg.onload = assetLoaded;
+waymoStoppedImg.onload = assetLoaded;
+motorcycleImg.onload = assetLoaded;
+motorcycleStoppedImg.onload = assetLoaded;
+scooterImg.onload = assetLoaded;
+scooterStoppedImg.onload = assetLoaded;
+bgMtTam.onload = assetLoaded;
+bgMission.onload = assetLoaded;
+bgGGP.onload = assetLoaded;
+bgMarketStreet.onload = assetLoaded;
+
+// Road Styles Config
+const roadStyles = {
+    mttam: {
+        bg: bgMtTam,
+        roadColor: '#42454a',
+        grassColor1: '#4ca127',
+        grassColor2: '#3d821e',
+        rumbleColor1: '#ff0000',
+        rumbleColor2: '#ffffff'
+    },
+    mission: {
+        bg: bgMission,
+        roadColor: '#2f2f2f',
+        grassColor1: '#505050',
+        grassColor2: '#404040',
+        rumbleColor1: '#ffe600',
+        rumbleColor2: '#ffffff'
+    },
+    ggp: {
+        bg: bgGGP,
+        roadColor: '#1a4a1a',
+        grassColor1: '#00ff00',
+        grassColor2: '#00cc00',
+        rumbleColor1: '#a52a2a',
+        rumbleColor2: '#ffffff'
+    },
+    market: {
+        bg: bgMarketStreet,
+        roadColor: '#555555',
+        grassColor1: '#cccccc',
+        grassColor2: '#aaaaaa',
+        rumbleColor1: '#ffff00',
+        rumbleColor2: '#ffffff'
+    },
+    custom: {
+        bg: new Image(), // Set dynamically
+        roadColor: '#42454a',
+        grassColor1: '#4ca127',
+        grassColor2: '#3d821e',
+        rumbleColor1: '#ff0000',
+        rumbleColor2: '#ffffff'
+    }
+};
 
 // Game State
 let position = 0;
-let paused = false;
+let paused = true; // Start paused for menu
 let playerX = 0; // -1 to 1
 let targetPlayerX = 0;
 const roadWidth = 2000;
@@ -77,6 +142,9 @@ const segmentLength = 200;
 const cameraDepth = 0.84;
 const cameraHeight = 1500;
 const drawDistance = 200;
+
+let currentVehicle = 'bike';
+let currentRoad = 'mttam';
 
 // Road Segments
 const segments = [];
@@ -91,28 +159,21 @@ function createRoad() {
     
     for (let n = 0; n < 2000; n++) {
         const z = n * segmentLength;
-        const isBridge = (z >= bridgeConfig.startZ && z <= bridgeConfig.endZ);
         
-        if (n > curveLength && !isBridge) {
+        if (n > curveLength) {
             currentCurve = (Math.random() - 0.5) * 6;
             curveLength = n + Math.floor(Math.random() * 50) + 20;
         }
         
-        let nextY;
-        if (isBridge) {
-            currentCurve = 0; // Straight on bridge
-            nextY = 0; // Flat on bridge
-        } else {
-            nextY = Math.sin(n / 20) * 800 + Math.sin(n / 5) * 200;
-        }
+        const nextY = Math.sin(n / 20) * 800 + Math.sin(n / 5) * 200;
         
         segments.push({
             p1: { x: 0, y: y, z: z },
             p2: { x: 0, y: nextY, z: (n + 1) * segmentLength },
             curve: currentCurve,
             color: Math.floor(n / 3) % 2 ? '#1a1a1a' : '#111111',
-            rumble: isBridge ? bridgeConfig.color : (Math.floor(n / 3) % 2 ? '#ff007f' : '#00ffff'),
-            isBridge: isBridge
+            rumble: Math.floor(n / 3) % 2 ? '#ff007f' : '#00ffff',
+            isBridge: false
         });
         
         y = nextY;
@@ -190,7 +251,13 @@ function render() {
     ctx.clearRect(0, 0, width, height);
     
     // Draw Background (Static for now to handle hills better, or parallax)
-    ctx.drawImage(bgImg, 0, 0, width, height);
+    const style = roadStyles[currentRoad];
+    if (style.bg && style.bg.complete) {
+        ctx.drawImage(style.bg, 0, 0, width, height);
+    } else {
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(0, 0, width, height);
+    }
     
     const startIndex = Math.floor(position / segmentLength);
     const maxSegments = Math.min(segments.length, startIndex + drawDistance);
@@ -214,7 +281,7 @@ function render() {
         project(p2, width, height);
         
         if (p2.screenY < height) {
-            ctx.fillStyle = Math.floor(n / 3) % 2 ? '#4ca127' : '#3d821e';
+            ctx.fillStyle = Math.floor(n / 3) % 2 ? style.grassColor1 : style.grassColor2;
             
             // Left grass
             ctx.beginPath();
@@ -253,7 +320,7 @@ function render() {
         
         if (p2.screenY < height) {
             // Draw road
-            ctx.fillStyle = segment.color;
+            ctx.fillStyle = segment.isBridge ? segment.color : (Math.floor(n / 3) % 2 ? style.roadColor : '#111111');
             ctx.beginPath();
             ctx.moveTo(p1.screenX - p1.screenWidth, p1.screenY);
             ctx.lineTo(p1.screenX + p1.screenWidth, p1.screenY);
@@ -262,7 +329,7 @@ function render() {
             ctx.fill();
             
             // Draw rumble strips
-            ctx.fillStyle = segment.rumble;
+            ctx.fillStyle = segment.isBridge ? segment.rumble : (Math.floor(n / 3) % 2 ? style.rumbleColor1 : style.rumbleColor2);
             const rumble1 = p1.screenWidth * 0.1;
             const rumble2 = p2.screenWidth * 0.1;
             
@@ -285,15 +352,10 @@ function render() {
             if (billboard) {
                 drawBillboard(ctx, segment, billboard);
             }
-            
-            // Check for bridge towers
-            if (bridgeConfig.towers.includes(segment.p1.z)) {
-                drawBridgeTower(ctx, segment);
-            }
         }
     }
     
-    // Draw Bike (center bottom)
+    // Draw Vehicle (center bottom)
     playerX += (targetPlayerX - playerX) * 0.1;
     
     const bikeW = 400;
@@ -307,8 +369,19 @@ function render() {
     ctx.save();
     ctx.translate(bikeX + bikeW / 2, bikeY + bikeH); // Pivot from bottom center (wheels)
     ctx.rotate(leanAngle);
-    const currentBikeImg = paused ? bikeStoppedImg : bikePedalingImg;
-    ctx.drawImage(currentBikeImg, -bikeW / 2, -bikeH, bikeW, bikeH);
+    
+    let vImg = bikePedalingImg;
+    if (currentVehicle === 'bike') {
+        vImg = paused ? bikeStoppedImg : bikePedalingImg;
+    } else if (currentVehicle === 'waymo') {
+        vImg = paused ? waymoStoppedImg : waymoImg;
+    } else if (currentVehicle === 'motorcycle') {
+        vImg = paused ? motorcycleStoppedImg : motorcycleImg;
+    } else if (currentVehicle === 'scooter') {
+        vImg = paused ? scooterStoppedImg : scooterImg;
+    }
+    
+    ctx.drawImage(vImg, -bikeW / 2, -bikeH, bikeW, bikeH);
     ctx.restore();
 }
 
@@ -346,58 +419,12 @@ function drawBillboard(ctx, segment, billboard) {
     ctx.fillText(billboard.details, x + 30*scale, y + 250*scale);
 }
 
-function drawBridgeTower(ctx, segment) {
-    const scale = segment.p1.screenWidth / roadWidth;
-    const towerH = 5000 * scale; // Massive height
-    const towerW = 300 * scale;
-    
-    // Position legs on the edges of the road
-    const leftX = segment.p1.screenX - segment.p1.screenWidth - towerW;
-    const rightX = segment.p1.screenX + segment.p1.screenWidth;
-    
-    const y = segment.p1.screenY - towerH;
-    
-    // Draw left leg
-    ctx.fillStyle = bridgeConfig.color;
-    ctx.fillRect(leftX, y, towerW, towerH);
-    
-    // Draw right leg
-    ctx.fillRect(rightX, y, towerW, towerH);
-    
-    // Draw crossbeams
-    const beamH = 150 * scale;
-    // Top beam
-    ctx.fillRect(leftX, y + towerH * 0.1, rightX - leftX + towerW, beamH);
-    // Middle beam
-    ctx.fillRect(leftX, y + towerH * 0.4, rightX - leftX + towerW, beamH);
-    // Bottom beam (above road)
-    ctx.fillRect(leftX, y + towerH * 0.7, rightX - leftX + towerW, beamH);
-    
-    // Add thin cross braces (X shape) between beams for detail
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 5 * scale;
-    
-    // Simple X between top and middle
-    ctx.beginPath();
-    ctx.moveTo(leftX + towerW, y + towerH * 0.1 + beamH);
-    ctx.lineTo(rightX, y + towerH * 0.4);
-    ctx.moveTo(rightX, y + towerH * 0.1 + beamH);
-    ctx.lineTo(leftX + towerW, y + towerH * 0.4);
-    ctx.stroke();
-    
-    // Simple X between middle and bottom
-    ctx.beginPath();
-    ctx.moveTo(leftX + towerW, y + towerH * 0.4 + beamH);
-    ctx.lineTo(rightX, y + towerH * 0.7);
-    ctx.moveTo(rightX, y + towerH * 0.4 + beamH);
-    ctx.lineTo(leftX + towerW, y + towerH * 0.7);
-    ctx.stroke();
-}
+
 
 function gameLoop() {
     if (!paused) {
         // Auto drive
-        position += 100; // Speed
+        position += 40; // Speed (was 100)
         if (position >= segments.length * segmentLength) {
             position = 0;
         }
@@ -411,3 +438,63 @@ function gameLoop() {
     render();
     requestAnimationFrame(gameLoop);
 }
+
+// Menu Listeners
+document.getElementById('vehicle-select').addEventListener('change', (e) => {
+    currentVehicle = e.target.value;
+});
+
+document.getElementById('road-select').addEventListener('change', (e) => {
+    currentRoad = e.target.value;
+    if (currentRoad === 'custom') {
+        document.getElementById('bg-upload').click();
+    }
+});
+
+document.getElementById('bg-upload').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                roadStyles.custom.bg = img;
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+let currentMusic = null;
+document.getElementById('start-btn').addEventListener('click', () => {
+    document.getElementById('menu-overlay').style.display = 'none';
+    paused = false;
+    init();
+    
+    // Play music
+    if (currentMusic) currentMusic.pause();
+    
+    let track = 'assets/music_default.mp3';
+    if (currentRoad === 'mttam') track = 'assets/music_mttam.mp3';
+    else if (currentRoad === 'mission') track = 'assets/music_mission.mp3';
+    else if (currentRoad === 'ggp') track = 'assets/music_ggp.mp3';
+    else if (currentRoad === 'market') track = 'assets/music_market.mp3';
+    
+    currentMusic = new Audio(track);
+    currentMusic.loop = true;
+    currentMusic.play().catch(e => console.log("Audio play failed:", e));
+    document.getElementById('music-toggle').innerText = '🎵 Music: ON';
+});
+
+document.getElementById('music-toggle').addEventListener('click', () => {
+    if (currentMusic) {
+        if (currentMusic.paused) {
+            currentMusic.play().catch(e => console.log("Audio play failed:", e));
+            document.getElementById('music-toggle').innerText = '🎵 Music: ON';
+        } else {
+            currentMusic.pause();
+            document.getElementById('music-toggle').innerText = '🎵 Music: OFF';
+        }
+    }
+});
