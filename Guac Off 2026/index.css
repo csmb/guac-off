@@ -192,8 +192,8 @@ body {
 .menu-overlay {
   position: absolute;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  left: 20px;
+  transform: translateY(-50%);
   background: rgba(13, 2, 33, 0.9);
   border: 4px solid var(--text-color);
   box-shadow: 0 0 20px var(--text-color), 0 0 40px var(--accent-color);
@@ -307,6 +307,10 @@ body {
 
 /* Mobile responsive steps */
 @media (max-width: 600px) {
+  .menu-overlay {
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
   .selection-grid {
     grid-template-columns: repeat(2, 1fr);
   }
