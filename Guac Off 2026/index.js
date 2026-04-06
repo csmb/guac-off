@@ -231,6 +231,27 @@ function init() {
         // Map mouse X to -1 to 1
         targetPlayerX = (e.clientX / window.innerWidth) * 2 - 1;
     });
+
+    // Gyroscope steering (tilt phone left/right)
+    function handleOrientation(e) {
+        if (e.gamma === null) return;
+        // gamma: -90 (left) to 90 (right). Clamp to ±30° for full steering range.
+        targetPlayerX = Math.max(-1, Math.min(1, e.gamma / 30));
+    }
+    if (typeof DeviceOrientationEvent !== 'undefined') {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 13+ requires explicit permission
+            DeviceOrientationEvent.requestPermission()
+                .then(state => {
+                    if (state === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                    }
+                })
+                .catch(console.error);
+        } else {
+            window.addEventListener('deviceorientation', handleOrientation);
+        }
+    }
     
     // Scroll interaction for progression
     window.addEventListener('scroll', handleScroll);
