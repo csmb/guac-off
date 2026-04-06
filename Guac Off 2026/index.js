@@ -39,8 +39,10 @@ const width = canvas.width;
 const height = canvas.height;
 
 // Load assets
-const bikePedalingImg = new Image();
-bikePedalingImg.src = 'assets/bike_pedaling.png';
+const bikePedalingLeftImg = new Image();
+bikePedalingLeftImg.src = 'assets/bike_pedaling_left.png';
+const bikePedalingRightImg = new Image();
+bikePedalingRightImg.src = 'assets/bike_pedaling_right.png';
 const bikeStoppedImg = new Image();
 bikeStoppedImg.src = 'assets/bike_stopped.png';
 const waymoImg = new Image();
@@ -66,16 +68,21 @@ const bgMarketStreet = new Image();
 bgMarketStreet.src = 'assets/bg_market_street.png';
 
 let assetsLoaded = 0;
-const totalAssets = 12;
+const totalAssets = 13;
 
 function assetLoaded() {
     assetsLoaded++;
     if (assetsLoaded === totalAssets) {
         document.getElementById('menu-overlay').style.display = 'block';
+        // Play menu music
+        currentMusic = new Audio('assets/music_mission.mp3');
+        currentMusic.loop = true;
+        currentMusic.play().catch(e => console.log("Menu audio play failed:", e));
     }
 }
 
-bikePedalingImg.onload = assetLoaded;
+bikePedalingLeftImg.onload = assetLoaded;
+bikePedalingRightImg.onload = assetLoaded;
 bikeStoppedImg.onload = assetLoaded;
 waymoImg.onload = assetLoaded;
 waymoStoppedImg.onload = assetLoaded;
@@ -370,9 +377,13 @@ function render() {
     ctx.translate(bikeX + bikeW / 2, bikeY + bikeH); // Pivot from bottom center (wheels)
     ctx.rotate(leanAngle);
     
-    let vImg = bikePedalingImg;
+    let vImg = bikePedalingLeftImg;
     if (currentVehicle === 'bike') {
-        vImg = paused ? bikeStoppedImg : bikePedalingImg;
+        if (paused) {
+            vImg = bikeStoppedImg;
+        } else {
+            vImg = (Math.floor(Date.now() / 1000) % 2 === 0) ? bikePedalingLeftImg : bikePedalingRightImg;
+        }
     } else if (currentVehicle === 'waymo') {
         vImg = paused ? waymoStoppedImg : waymoImg;
     } else if (currentVehicle === 'motorcycle') {
@@ -440,15 +451,37 @@ function gameLoop() {
 }
 
 // Menu Listeners
-document.getElementById('vehicle-select').addEventListener('change', (e) => {
-    currentVehicle = e.target.value;
+// Menu Listeners
+function setStep(step) {
+    if (window.innerWidth <= 600) {
+        document.querySelectorAll('.menu-step').forEach(s => s.classList.remove('active'));
+        const el = document.getElementById(`step-${step}`);
+        if(el) el.classList.add('active');
+    }
+}
+setStep(1);
+
+document.querySelectorAll('#vehicle-grid .grid-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+        const el = e.currentTarget;
+        document.querySelectorAll('#vehicle-grid .grid-item').forEach(i => i.classList.remove('selected'));
+        el.classList.add('selected');
+        currentVehicle = el.dataset.value;
+        setStep(2);
+    });
 });
 
-document.getElementById('road-select').addEventListener('change', (e) => {
-    currentRoad = e.target.value;
-    if (currentRoad === 'custom') {
-        document.getElementById('bg-upload').click();
-    }
+document.querySelectorAll('#road-grid .grid-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+        const el = e.currentTarget;
+        if (el.dataset.value === 'custom') {
+            document.getElementById('bg-upload').click();
+            return;
+        }
+        document.querySelectorAll('#road-grid .grid-item').forEach(i => i.classList.remove('selected'));
+        el.classList.add('selected');
+        currentRoad = el.dataset.value;
+    });
 });
 
 document.getElementById('bg-upload').addEventListener('change', (e) => {
@@ -459,6 +492,9 @@ document.getElementById('bg-upload').addEventListener('change', (e) => {
             const img = new Image();
             img.onload = () => {
                 roadStyles.custom.bg = img;
+                document.querySelectorAll('#road-grid .grid-item').forEach(i => i.classList.remove('selected'));
+                document.getElementById('upload-item').classList.add('selected');
+                currentRoad = 'custom';
             };
             img.src = event.target.result;
         };
@@ -467,12 +503,7 @@ document.getElementById('bg-upload').addEventListener('change', (e) => {
 });
 
 let currentMusic = null;
-document.getElementById('start-btn').addEventListener('click', () => {
-    document.getElementById('menu-overlay').style.display = 'none';
-    paused = false;
-    init();
-    
-    // Play music
+function playMusic() {
     if (currentMusic) currentMusic.pause();
     
     let track = 'assets/music_default.mp3';
@@ -485,6 +516,26 @@ document.getElementById('start-btn').addEventListener('click', () => {
     currentMusic.loop = true;
     currentMusic.play().catch(e => console.log("Audio play failed:", e));
     document.getElementById('music-toggle').innerText = '🎵 Music: ON';
+}
+
+document.getElementById('start-btn').addEventListener('click', () => {
+    document.getElementById('menu-overlay').style.display = 'none';
+    paused = false;
+    init();
+    playMusic();
+});
+
+document.getElementById('dice-btn').addEventListener('click', () => {
+    const vehicles = ['bike', 'waymo', 'motorcycle', 'scooter'];
+    const roads = ['mttam', 'mission', 'ggp', 'market'];
+    
+    currentVehicle = vehicles[Math.floor(Math.random() * vehicles.length)];
+    currentRoad = roads[Math.floor(Math.random() * roads.length)];
+    
+    document.getElementById('menu-overlay').style.display = 'none';
+    paused = false;
+    init();
+    playMusic();
 });
 
 document.getElementById('music-toggle').addEventListener('click', () => {
@@ -496,5 +547,16 @@ document.getElementById('music-toggle').addEventListener('click', () => {
             currentMusic.pause();
             document.getElementById('music-toggle').innerText = '🎵 Music: OFF';
         }
+    }
+});
+
+document.getElementById('restart-btn').addEventListener('click', () => {
+    position = 0;
+    paused = true;
+    document.getElementById('menu-overlay').style.display = 'block';
+    setStep(1); // Reset step!
+    if (currentMusic) {
+        currentMusic.pause();
+        currentMusic.currentTime = 0;
     }
 });

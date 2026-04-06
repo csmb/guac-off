@@ -10,29 +10,36 @@
     <div class="game-container">
         <canvas id="game-canvas"></canvas>
         <button id="music-toggle" class="music-toggle">🎵 Music: ON</button>
+        <button id="restart-btn" class="restart-btn">🔄 Restart</button>
         <div id="menu-overlay" class="menu-overlay">
             <h1>SF GUAC OFF 2026</h1>
-            <div class="menu-group">
-                <label>Vehicle</label>
-                <select id="vehicle-select">
-                    <option value="bike">Vintage Bike</option>
-                    <option value="waymo">Waymo</option>
-                    <option value="motorcycle">Motorcycle</option>
-                    <option value="scooter">Lime Scooter</option>
-                </select>
+            
+            <div id="step-1" class="menu-step">
+                <h2>Choose Your Ride</h2>
+                <div class="selection-grid" id="vehicle-grid">
+                    <div class="grid-item selected" data-value="bike"><img src="assets/bike_stopped.png" alt="Bike"><p>Bike</p></div>
+                    <div class="grid-item" data-value="waymo"><img src="assets/waymo_stopped.png" alt="Waymo"><p>Waymo</p></div>
+                    <div class="grid-item" data-value="motorcycle"><img src="assets/motorcycle_stopped.png" alt="Motorcycle"><p>Harley</p></div>
+                    <div class="grid-item" data-value="scooter"><img src="assets/scooter_stopped.png" alt="Scooter"><p>Scooter</p></div>
+                </div>
             </div>
-            <div class="menu-group">
-                <label>Road</label>
-                <select id="road-select">
-                    <option value="mttam">Mt. Tam</option>
-                    <option value="mission">SF Mission</option>
-                    <option value="ggp">Golden Gate Park</option>
-                    <option value="market">Market Street</option>
-                    <option value="custom">Upload your own</option>
-                </select>
+            
+            <div id="step-2" class="menu-step">
+                <h2>Choose Your Road</h2>
+                <div class="selection-grid" id="road-grid">
+                    <div class="grid-item selected" data-value="mttam"><img src="assets/bg.png" alt="Mt. Tam"><p>Mt. Tam</p></div>
+                    <div class="grid-item" data-value="mission"><img src="assets/bg_mission.png" alt="Mission"><p>Mission</p></div>
+                    <div class="grid-item" data-value="ggp"><img src="assets/bg_ggp.png" alt="GGP"><p>GGP</p></div>
+                    <div class="grid-item" data-value="market"><img src="assets/bg_market_street.png" alt="Market"><p>Market St</p></div>
+                    <div class="grid-item" data-value="custom" id="upload-item"><div class="upload-icon">📤</div><p>Upload</p></div>
+                </div>
                 <input type="file" id="bg-upload" accept="image/*" style="display: none;">
             </div>
-            <button id="start-btn">START RIDE</button>
+            
+            <div class="menu-actions">
+                <button id="dice-btn" class="dice-btn">🎲 Random</button>
+                <button id="start-btn" class="start-btn">START RIDE</button>
+            </div>
         </div>
         <div class="ui-layer">
             <!-- UI removed as per user request -->
