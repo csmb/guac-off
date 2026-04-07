@@ -155,8 +155,8 @@ const roadStyles = {
         roadColor: '#2f2f2f',
         grassColor1: '#505050',
         grassColor2: '#404040',
-        rumbleColor1: '#ffe600',
-        rumbleColor2: '#ffffff'
+        rumbleColor1: '#0055ff', // Blue
+        rumbleColor2: '#ff2200'  // Red
     },
     ggp: {
         bg: bgGGP,
@@ -189,12 +189,43 @@ let position = 0;
 let lastAutoScrollTime = 0;
 let paused = true; // Start paused for menu
 let gameStarted = false;
+
+// Gameplay Variables
+let score = 0;
+let startTime = 0;
+let elapsedTime = 0;
+let raceFinished = false;
+let countdown = 3;
+let countdownActive = false;
+let countdownStartTime = 0;
+let currentSpeed = 0;
+const VEHICLE_SPEEDS = {
+    'bike': 40,
+    'scooter': 50,
+    'motorcycle': 80,
+    'waymo': 60
+};
+const obstacles = []; // { z: number, x: number }
+const pickups = [];    // { z: number, x: number, type: string }
+const INGREDIENTS = ['avocado', 'jalapeno', 'onion', 'cilantro', 'lime', 'chip'];
+let floatingTexts = [];
+let flyingObjects = [];
+let speedBonus = 0;
+let lastCountdown = 4;
+
+const ingredientImgs = {};
+INGREDIENTS.forEach(ing => {
+    ingredientImgs[ing] = new Image();
+    ingredientImgs[ing].src = `assets/${ing}.png`;
+});
+const coneImg = new Image();
+coneImg.src = 'assets/cone.png';
 let playerX = 0; // -1 to 1
 let targetPlayerX = 0;
 let roadWidth = 500;
 const segmentLength = 200;
 const cameraDepth = 0.84;
-const cameraHeight = 1500;
+const cameraHeight = 2500;
 let cameraOffsetX = 0;
 const drawDistance = 200;
 
@@ -206,6 +237,73 @@ const segments = [];
 
 // Billboards moved to top configuration
 
+function playSound(type) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    if (type === 'ding') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1000, ctx.currentTime);
+        gain.gain.setValueAtTime(0.5, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+    } else if (type === 'chomp') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(200, ctx.currentTime);
+        gain.gain.setValueAtTime(0.5, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+    } else if (type === 'coin') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+    } else if (type === 'beep_low') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        gain.gain.setValueAtTime(0.5, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+    } else if (type === 'beep_high') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.5, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+    } else if (type === 'fanfare') {
+        // Placeholder for MP3s!
+        console.log("Playing fanfare placeholder...");
+        const fanfare = new Audio('assets/fanfare.mp3');
+        fanfare.play().catch(e => console.log("Fanfare file missing, using fallback beep!"));
+        fanfare.onended = () => {
+            const afterSong = new Audio('assets/after_party.mp3');
+            if (currentMusic) currentMusic.pause(); // Stop race music
+            afterSong.play().catch(e => console.log("After party file missing!"));
+        };
+    } else if (type === 'error') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, ctx.currentTime);
+        gain.gain.setValueAtTime(0.5, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+    }
+}
+
+function addFloatingText(text, x, y, color) {
+    floatingTexts.push({ text, x, y, color, life: 1.0 });
+}
+
 // Generate Road
 function createRoad() {
     segments.length = 0; // Clear existing segments
@@ -213,32 +311,49 @@ function createRoad() {
     let curveLength = 0;
     let y = 0;
     
-    for (let n = 0; n < 2000; n++) {
+    // Clear gameplay objects
+    obstacles.length = 0;
+    pickups.length = 0;
+    
+    const isMission = currentRoad === 'mission';
+    
+    for (let n = 0; n < 1000; n++) {
         const z = n * segmentLength;
         
-        if (n > curveLength) {
+        if (!isMission && n > curveLength) {
             currentCurve = (Math.random() - 0.5) * 6;
             curveLength = n + Math.floor(Math.random() * 50) + 20;
         }
         
-        const nextY = Math.sin(n / 20) * 800 + Math.sin(n / 5) * 200;
+        const nextY = isMission ? 0 : (Math.sin(n / 20) * 800 + Math.sin(n / 5) * 200);
         
         segments.push({
             p1: { x: 0, y: y, z: z },
             p2: { x: 0, y: nextY, z: (n + 1) * segmentLength },
-            curve: currentCurve,
+            curve: isMission ? 0 : currentCurve,
             color: Math.floor(n / 3) % 2 ? '#1a1a1a' : '#111111',
             rumble: Math.floor(n / 3) % 2 ? '#ff007f' : '#00ffff',
             isBridge: false
         });
         
         y = nextY;
+        
+        // Spawn obstacles and pickups
+        if (n > 50 && n < 1900) { // Don't spawn right at start or end
+            if (Math.random() < 0.05) { // 5% chance per segment
+                obstacles.push({ z: z, x: (Math.random() - 0.5) * 1.5 }); // x is -0.75 to 0.75
+            }
+            if (Math.random() < 0.03) { // 3% chance per segment
+                const type = INGREDIENTS[Math.floor(Math.random() * INGREDIENTS.length)];
+                pickups.push({ z: z, x: (Math.random() - 0.5) * 1.5, type: type });
+            }
+        }
     }
 }
 
 // Project 3D to 2D
 function project(p, width, height) {
-    const sp = cameraDepth / (p.z - position);
+    const sp = cameraDepth / Math.max(1, p.z - position);
     
     // Apply curve
     let curveOffsetX = 0;
@@ -249,10 +364,10 @@ function project(p, width, height) {
         if(segments[i]) curveOffsetX += segments[i].curve * 20;
     }
 
-    p.screenX = (width / 2 + cameraOffsetX) + (p.x + curveOffsetX - playerX * roadWidth) * sp * (width / 2);
+    p.screenX = (width / 2 + cameraOffsetX) + (p.x + curveOffsetX - playerX * roadWidth) * sp * 600;
     // Adjust Y projection for hills
     p.screenY = (height / 2) + (cameraHeight - p.y) * sp * (height / 2);
-    p.screenWidth = roadWidth * sp * (width / 2);
+    p.screenWidth = roadWidth * sp * 600;
 }
 function handleScroll() {
     if (Date.now() - lastAutoScrollTime < 100) return; // Ignore events triggered by auto-scroll
@@ -492,6 +607,23 @@ function render() {
             ctx.lineTo(p2.screenX - p2.screenWidth, p2.screenY - 1);
             ctx.fill();
             
+            // Draw Start Line
+            if (n === 0) {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(p1.screenX - p1.screenWidth, p1.screenY - 10, p1.screenWidth * 2, 20);
+            }
+            // Draw Finish Line
+            if (n === segments.length - 1) {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(p1.screenX - p1.screenWidth, p1.screenY - 10, p1.screenWidth * 2, 20);
+                // Checkered pattern
+                ctx.fillStyle = '#000000';
+                const squareSize = p1.screenWidth * 2 / 10;
+                for (let i = 0; i < 10; i += 2) {
+                    ctx.fillRect(p1.screenX - p1.screenWidth + i * squareSize, p1.screenY - 10, squareSize, 20);
+                }
+            }
+            
             // Draw rumble strips
             ctx.fillStyle = segment.isBridge ? segment.rumble : (Math.floor(n / 3) % 2 ? style.rumbleColor1 : style.rumbleColor2);
             const rumble1 = p1.screenWidth * 0.1;
@@ -607,11 +739,123 @@ function render() {
         }
     });
     
+    // Draw Obstacles (Cones)
+    obstacles.forEach(o => {
+        if (o.z <= position) return; // Behind camera
+        const segIndex = Math.floor(o.z / segmentLength);
+        const startIndex = Math.floor(position / segmentLength);
+        const drawDistance = isMobile ? 50 : 150;
+        const maxSegments = Math.min(segments.length, startIndex + drawDistance);
+        
+        if (segIndex >= startIndex && segIndex < maxSegments) {
+            const segment = segments[segIndex];
+            const p = { x: o.x * roadWidth, y: segment.p1.y, z: o.z };
+            project(p, width, height);
+            
+            const scale = p.screenWidth / roadWidth;
+            const w = 300 * scale; // Tripled
+            const h = 480 * scale; // Tripled
+            
+            if (coneImg.complete) {
+                ctx.drawImage(coneImg, p.screenX - w/2, p.screenY - h, w, h);
+            } else {
+                ctx.fillStyle = '#ff5500'; // Orange cone!
+                ctx.beginPath();
+                ctx.moveTo(p.screenX - w/2, p.screenY);
+                ctx.lineTo(p.screenX + w/2, p.screenY);
+                ctx.lineTo(p.screenX + w/4, p.screenY - h);
+                ctx.lineTo(p.screenX - w/4, p.screenY - h);
+                ctx.fill();
+                
+                // Stripe
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(p.screenX - w/3, p.screenY - h/2, w*2/3, h/4);
+            }
+        }
+    });
+
+    // Draw Pickups (Ingredients)
+    try {
+        pickups.forEach(p => {
+            if (p.z <= position) return; // Behind camera
+            const segIndex = Math.floor(p.z / segmentLength);
+            const startIndex = Math.floor(position / segmentLength);
+            const drawDistance = isMobile ? 50 : 150;
+            const maxSegments = Math.min(segments.length, startIndex + drawDistance);
+            
+            if (segIndex >= startIndex && segIndex < maxSegments) {
+                const segment = segments[segIndex];
+                const pt = { x: p.x * roadWidth, y: segment.p1.y, z: p.z };
+                project(pt, width, height);
+                
+                const scale = pt.screenWidth / roadWidth;
+                const size = 300 * scale;
+                
+                const img = ingredientImgs[p.type];
+                if (img && img.complete) {
+                    ctx.drawImage(img, pt.screenX - size, pt.screenY - size*2, size*2, size*2);
+                } else {
+                    ctx.fillStyle = p.type === 'avocado' ? '#556b2f' : '#ff0000'; // Green for avo, red for others for now!
+                    ctx.beginPath();
+                    ctx.arc(pt.screenX, pt.screenY - size, size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Text label
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = `${Math.floor(12 * scale * 2)}px Arial`;
+                    ctx.fillText(p.type, pt.screenX - size, pt.screenY - size*2);
+                }
+            }
+        });
+    } catch (e) {
+        console.error("Error drawing pickups:", e);
+    }
+
+    // Draw Flying Objects
+    try {
+        for (let i = flyingObjects.length - 1; i >= 0; i--) {
+            const fo = flyingObjects[i];
+            fo.x += fo.vx;
+            fo.y += fo.vy;
+            fo.z += fo.vz;
+            fo.vy -= 1; // Gravity pulling down (decreasing Y)
+            fo.life--;
+            
+            const pt = { x: fo.x * roadWidth, y: fo.y, z: fo.z };
+            project(pt, width, height);
+            
+            const scale = pt.screenWidth / roadWidth;
+            const w = 300 * scale; // Tripled
+            const h = 480 * scale; // Tripled
+            
+            if (fo.type === 'cone') {
+                if (coneImg.complete) {
+                    ctx.drawImage(coneImg, pt.screenX - w/2, pt.screenY - h, w, h);
+                } else {
+                    ctx.fillStyle = '#ff5500';
+                    ctx.beginPath();
+                    ctx.moveTo(pt.screenX - w/2, pt.screenY);
+                    ctx.lineTo(pt.screenX + w/2, pt.screenY);
+                    ctx.lineTo(pt.screenX + w/4, pt.screenY - h);
+                    ctx.lineTo(pt.screenX - w/4, pt.screenY - h);
+                    ctx.fill();
+                }
+            }
+            
+            // Remove if life expires
+            if (fo.life <= 0) {
+                flyingObjects.splice(i, 1);
+            }
+        }
+    } catch (e) {
+        console.error("Error drawing flying objects:", e);
+    }
+
     // Draw Vehicle (center bottom)
     playerX += (targetPlayerX - playerX) * 0.1;
     
-    const bikeW = isMobile ? 225 : 400;
-    const bikeH = isMobile ? 225 : 400;
+    const bikeW = isMobile ? 170 : 300;
+    const bikeH = isMobile ? 170 : 300;
     const bikeX = (width / 2 + cameraOffsetX) - (bikeW / 2) + (playerX * 100);
     const bikeY = height - bikeH - 20;
     
@@ -639,6 +883,36 @@ function render() {
     
     ctx.drawImage(vImg, -bikeW / 2, -bikeH, bikeW, bikeH);
     ctx.restore();
+
+    // Update and Draw Floating Texts
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.life -= 0.01; // Stay longer!
+        ft.y -= 2; // Float up!
+        if (ft.life <= 0) {
+            floatingTexts.splice(i, 1);
+        } else {
+            ctx.fillStyle = ft.color;
+            ctx.font = `bold ${Math.floor(40 + ft.life*20)}px Arial`; // Bigger font!
+            ctx.globalAlpha = ft.life;
+            
+            // Fun effect: Glow/Drop Shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
+            
+            ctx.fillText(ft.text, ft.x, ft.y);
+            
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            ctx.globalAlpha = 1.0;
+        }
+    }
 }
 
 function drawBillboard(ctx, segment, billboard) {
@@ -679,13 +953,88 @@ function drawBillboard(ctx, segment, billboard) {
 
 function gameLoop() {
     const isMobile = window.innerWidth < 600;
-    roadWidth = 1000;
+    roadWidth = 2000;
     
-    if (!paused) {
+    if (countdownActive) {
+        const elapsed = (Date.now() - countdownStartTime) / 1000;
+        countdown = 3 - Math.floor(elapsed);
+        
+        if (countdown !== lastCountdown) {
+            if (countdown > 0) playSound('beep_low');
+            else if (countdown === 0) playSound('beep_high');
+            lastCountdown = countdown;
+        }
+        
+        if (countdown <= 0) {
+            countdownActive = false;
+            startTime = Date.now();
+        }
+    }
+    
+    if (!paused && !countdownActive && !raceFinished) {
         // Auto drive
-        position += 40; // Speed (was 100)
+        let maxSpeed = VEHICLE_SPEEDS[currentVehicle] || 40;
+        let targetSpeed = maxSpeed + speedBonus;
+        if (Math.abs(playerX) > 0.8) {
+            targetSpeed = (maxSpeed + speedBonus) * 0.5; // Slow down on curb!
+        }
+        currentSpeed += (targetSpeed - currentSpeed) * 0.1; // Smooth transition
+        position += currentSpeed;
+        
         if (position >= segments.length * segmentLength) {
-            position = 0;
+            raceFinished = true;
+            elapsedTime = (Date.now() - startTime) / 1000;
+            playSound('fanfare');
+        }
+        
+        // Collision Detection
+        const currentSegIndex = Math.floor(position / segmentLength);
+        
+        // Collision Detection
+        const riderZ = position + 3000; // Rider is approx 3000 units in front of camera
+        
+        // Check obstacles
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            const o = obstacles[i];
+            if (Math.abs(o.z - riderZ) < 200) {
+                if (Math.abs(playerX - o.x) < 0.3) { // Hit!
+                    score -= 50;
+                    speedBonus = Math.max(speedBonus - 10, 0); // Lose bonus!
+                    currentSpeed = Math.max(currentSpeed - 20, 10); // Sudden jolt!
+                    playSound('error');
+                    addFloatingText('-50', width / 2, height / 2, '#ff0000');
+                    
+                    // Make cone fly off
+                    flyingObjects.push({
+                        x: o.x,
+                        y: 0,
+                        z: o.z,
+                        vx: (Math.random() < 0.5 ? -1 : 1) * 2, // Fly left or right
+                        vy: 20, // Jump UP in our Y-up system
+                        vz: 10,  // Move forward
+                        type: 'cone',
+                        life: 60 // 60 frames life
+                    });
+                    
+                    obstacles.splice(i, 1); // Remove it
+                }
+            }
+        }
+        
+        // Check pickups
+        for (let i = pickups.length - 1; i >= 0; i--) {
+            const p = pickups[i];
+            if (Math.abs(p.z - riderZ) < 200) {
+                if (Math.abs(playerX - p.x) < 0.3) { // Picked up!
+                    score += 25;
+                    speedBonus = Math.min(speedBonus + 5, 40); // Max +40 speed
+                    if (p.type === 'avocado') playSound('ding');
+                    else if (p.type === 'chip') playSound('chomp');
+                    else playSound('coin');
+                    addFloatingText('+25', width / 2, height / 2, '#00ff00');
+                    pickups.splice(i, 1); // Remove it
+                }
+            }
         }
         
         // Sync scrollbar
@@ -693,12 +1042,67 @@ function gameLoop() {
         window.scrollTo(0, position / 10);
     }
     
-    
     render();
+    
+    // Draw Score and Time
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 30px Arial';
+    ctx.fillText(`Score: ${score}`, 20, 100);
+    const displayTime = raceFinished ? elapsedTime : (gameStarted && !countdownActive ? ((Date.now() - startTime) / 1000) : 0);
+    ctx.fillText(`Time: ${displayTime.toFixed(1)}s`, 20, 130);
+    ctx.fillText(`Speed: ${Math.floor(currentSpeed)} MPH`, 20, 160);
+    
+    // Start Message and Countdown (with Scrim)
+    if (countdownActive) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 30px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText("The Guac Off is starting soon!", width / 2, height / 2 - 150);
+        ctx.font = '20px Arial';
+        ctx.fillText("Collect ingredients and make your way to the party.", width / 2, height / 2 - 100);
+        
+        // Countdown
+        if (countdown === 3) ctx.fillStyle = '#ff0000'; // Red
+        else if (countdown === 2) ctx.fillStyle = '#ffff00'; // Yellow
+        else if (countdown === 1) ctx.fillStyle = '#00ff00'; // Green
+        else ctx.fillStyle = '#ff00ff';
+        
+        ctx.font = 'bold 100px Arial';
+        ctx.fillText(countdown.toString(), width / 2, height / 2 + 50);
+        
+        ctx.textAlign = 'left'; // Reset
+    }
+    
+    // Big Finish
+    if (raceFinished) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 50px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText("You made it to the Guac Off!", width / 2, height / 2 - 100);
+        
+        ctx.font = '30px Arial';
+        ctx.fillText(`Final Score: ${score}`, width / 2, height / 2);
+        ctx.fillText(`Final Time: ${displayTime.toFixed(1)}s`, width / 2, height / 2 + 50);
+        
+        // Draw Play Again button
+        ctx.fillStyle = '#ff00ff';
+        ctx.fillRect(width / 2 - 100, height / 2 + 100, 200, 50);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px Arial';
+        ctx.fillText("PLAY AGAIN", width / 2, height / 2 + 130);
+        
+        ctx.textAlign = 'left'; // Reset
+    }
     
     const debugDiv = document.getElementById('debug-overlay');
     if (debugDiv) {
-        debugDiv.textContent = `Paused: ${paused} | Pos: ${position} | Segments: ${segments.length} | PlayerX: ${playerX.toFixed(2)}`;
+        debugDiv.textContent = `Paused: ${paused} | Pos: ${position} | Segments: ${segments.length} | PlayerX: ${playerX.toFixed(2)}${raceFinished ? ' | FINISHED!' : ''}`;
     }
 }
 
@@ -733,6 +1137,7 @@ document.querySelectorAll('#road-grid .grid-item').forEach(item => {
         document.querySelectorAll('#road-grid .grid-item').forEach(i => i.classList.remove('selected'));
         el.classList.add('selected');
         currentRoad = el.dataset.value;
+        createRoad(); // Regenerate road!
     });
 });
 
@@ -776,8 +1181,12 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
     menu.style.display = 'none';
     menu.style.opacity = '0';
     menu.style.pointerEvents = 'none';
-    paused = true; // Stay paused until click anywhere
+    paused = false; // Start game loop for countdown!
     gameStarted = true;
+    countdownActive = true;
+    countdownStartTime = Date.now();
+    raceFinished = false; // Reset race!
+    score = 0; // Reset score!
     init();
     playMusic();
 });
@@ -786,6 +1195,28 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
 
 document.addEventListener('click', (e) => {
     console.log(`Document click: paused=${paused}, gameStarted=${gameStarted}, target=${e.target.id}`);
+    
+    if (raceFinished) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        // Button area: width / 2 - 100, height / 2 + 100, 200, 50
+        if (x > width / 2 - 100 && x < width / 2 + 100 &&
+            y > height / 2 + 100 && y < height / 2 + 150) {
+            // Restart game!
+            score = 0;
+            raceFinished = false;
+            gameStarted = true;
+            countdownActive = true;
+            countdownStartTime = Date.now();
+            lastCountdown = 4;
+            init();
+            playMusic();
+            return;
+        }
+    }
+    
     if (gameStarted && 
         e.target.id !== 'music-toggle' && e.target.id !== 'restart-btn') {
         paused = !paused;
