@@ -339,11 +339,11 @@ function createRoad() {
         y = nextY;
         
         // Spawn obstacles and pickups
-        if (n > 50 && n < 1900) { // Don't spawn right at start or end
-            if (Math.random() < 0.05) { // 5% chance per segment
+        if (n > 50 && n < 900) { // Don't spawn right at start or end (length 1000)
+            if (Math.random() < 0.02) { // 2% chance per segment
                 obstacles.push({ z: z, x: (Math.random() - 0.5) * 1.5 }); // x is -0.75 to 0.75
             }
-            if (Math.random() < 0.03) { // 3% chance per segment
+            if (Math.random() < 0.01) { // 1% chance per segment
                 const type = INGREDIENTS[Math.floor(Math.random() * INGREDIENTS.length)];
                 pickups.push({ z: z, x: (Math.random() - 0.5) * 1.5, type: type });
             }
@@ -647,7 +647,8 @@ function render() {
         }
     }
     
-    // Draw Billboards on Canvas!
+    // Draw Billboards on Canvas! (Hidden as requested)
+    if (false) {
     billboards.forEach(b => {
         if (b.z <= position) return; // Behind camera
         
@@ -738,6 +739,7 @@ function render() {
             ctx.restore();
         }
     });
+    }
     
     // Draw Obstacles (Cones)
     obstacles.forEach(o => {
@@ -997,7 +999,7 @@ function gameLoop() {
         for (let i = obstacles.length - 1; i >= 0; i--) {
             const o = obstacles[i];
             if (Math.abs(o.z - riderZ) < 200) {
-                if (Math.abs(playerX - o.x) < 0.3) { // Hit!
+                if (Math.abs(playerX - o.x) < 0.1) { // Tightened collision radius!
                     score -= 50;
                     speedBonus = Math.max(speedBonus - 10, 0); // Lose bonus!
                     currentSpeed = Math.max(currentSpeed - 20, 10); // Sudden jolt!
@@ -1025,7 +1027,7 @@ function gameLoop() {
         for (let i = pickups.length - 1; i >= 0; i--) {
             const p = pickups[i];
             if (Math.abs(p.z - riderZ) < 200) {
-                if (Math.abs(playerX - p.x) < 0.3) { // Picked up!
+                if (Math.abs(playerX - p.x) < 0.1) { // Tightened collision radius!
                     score += 25;
                     speedBonus = Math.min(speedBonus + 5, 40); // Max +40 speed
                     if (p.type === 'avocado') playSound('ding');
@@ -1224,11 +1226,14 @@ document.addEventListener('click', (e) => {
 });
 
 window.addEventListener('touchstart', (e) => {
+    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+        e.preventDefault(); // Prevent selection on canvas/body!
+    }
     if (paused && gameStarted && 
         e.target.id !== 'music-toggle' && e.target.id !== 'restart-btn') {
         paused = false;
     }
-});
+}, { passive: false });
 
 document.getElementById('dice-btn').addEventListener('click', (e) => {
     e.stopPropagation();
