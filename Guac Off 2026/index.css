@@ -526,3 +526,25 @@ body {
     padding: 3px 12px;
   }
 }
+
+/* Persistent scroll hint on game hero, pointing to info section */
+#scroll-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 10;
+  background: #1b4d3e;
+  color: #ebd2b4;
+  border: 2px solid #ff5500;
+  font-family: var(--font-title);
+  font-size: 9px;
+  letter-spacing: 2px;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+#scroll-hint:hover {
+  background: #ff5500;
+  color: #1b4d3e;
+}

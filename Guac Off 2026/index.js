@@ -979,6 +979,11 @@ document.addEventListener('click', (e) => {
     }
 });
 
+document.getElementById('scroll-hint').addEventListener('click', (e) => {
+    e.stopPropagation(); // don't trigger the global pause-on-click
+    document.getElementById('info').scrollIntoView({ behavior: 'smooth' });
+});
+
 window.addEventListener('touchstart', (e) => {
     if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
         e.preventDefault(); // Prevent selection on canvas/body!
