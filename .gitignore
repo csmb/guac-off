@@ -22,3 +22,6 @@ tmp/
 # Env
 .env
 .env.*
+
+# Superpowers brainstorm sessions
+.superpowers/
