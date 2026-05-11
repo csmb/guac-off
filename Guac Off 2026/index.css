@@ -363,3 +363,123 @@ body {
   background: var(--accent-color);
   color: #000;
 }
+
+/* ============ Info section (below game hero) ============ */
+
+#info {
+  background: #1b4d3e;
+  color: #ebd2b4;
+  font-family: var(--font-body); /* VT323 */
+  padding: 56px 20px;
+}
+
+#info > * {
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#info > * + * {
+  margin-top: 40px;
+}
+
+.info-intro {
+  text-align: center;
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: normal; /* VT323 reads better at normal weight */
+}
+
+/* Essentials label-strip grid */
+.info-essentials {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 6px 14px;
+  font-size: 22px;
+  line-height: 1.4;
+}
+
+.info-essentials dt {
+  background: #ff5500;
+  color: #ebd2b4;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 2px 0;
+  font-family: var(--font-title); /* Press Start 2P */
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-essentials dd {
+  margin: 0;
+  align-self: center;
+}
+
+/* Schedule */
+.info-schedule h3,
+.info-awards h3 {
+  font-family: var(--font-title);
+  font-size: 14px;
+  color: #ff5500;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-weight: normal;
+}
+
+.info-schedule ol {
+  list-style: none;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1.5;
+}
+
+.info-schedule li {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 12px;
+}
+
+.info-schedule .time {
+  color: #ff5500;
+}
+
+/* Award chips */
+.chips {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.chips li {
+  border: 2px solid #ff5500;
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 20px;
+  color: #ebd2b4;
+  background: transparent;
+}
+
+/* Footer */
+#info-footer {
+  background: #1b4d3e;
+  color: #ebd2b4;
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 20px;
+  border-top: 1px dashed rgba(235, 210, 180, 0.3);
+  /* override #info > * + * margin-top so footer sits flush */
+  margin-top: 0;
+  max-width: none;
+  margin-left: -20px;
+  margin-right: -20px;
+  margin-bottom: -56px;
+}
