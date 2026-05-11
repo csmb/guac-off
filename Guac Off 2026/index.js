@@ -492,9 +492,6 @@ function init() {
         }
     });
 
-
-
-    requestAnimationFrame(gameLoop);
 }
 
 function drawSpeedLines() {
