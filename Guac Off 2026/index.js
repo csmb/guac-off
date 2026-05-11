@@ -153,6 +153,14 @@ let speedBonus = 0;
 let screenShake = { frames: 0, magnitude: 0 };
 let lastCountdown = 4;
 
+const FOG_INTENSITY = { mttam: 1.0, mission: 0.0, ggp: 0.25, market: 0.0 };
+const fogBanks = [
+    { x: 0,    y: 0.55, w: 600, speed: 0.4, alpha: 0.55 },
+    { x: -300, y: 0.62, w: 700, speed: 0.7, alpha: 0.45 },
+    { x: 400,  y: 0.50, w: 500, speed: 0.3, alpha: 0.35 },
+];
+let winnersCircleActive = false;  // will be set by Task 9 — declared here so drawFog can reference it
+
 const ingredientImgs = {};
 INGREDIENTS.forEach(ing => {
     ingredientImgs[ing] = new Image();
@@ -554,6 +562,25 @@ function drawLandmarks() {
     }
 }
 
+function drawFog() {
+    if (winnersCircleActive) return; // suppressed during winners circle
+    const intensity = FOG_INTENSITY[currentRoad] || 0;
+    if (intensity <= 0) return;
+
+    for (const bank of fogBanks) {
+        bank.x += bank.speed; // drift
+        if (bank.x > canvas.width + bank.w) bank.x = -bank.w;
+
+        const y = canvas.height * bank.y;
+        const grad = ctx.createLinearGradient(bank.x, y, bank.x + bank.w, y);
+        grad.addColorStop(0,   `rgba(220,225,230,0)`);
+        grad.addColorStop(0.5, `rgba(220,225,230,${bank.alpha * intensity})`);
+        grad.addColorStop(1,   `rgba(220,225,230,0)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(bank.x, y - 40, bank.w, 80);
+    }
+}
+
 // Render
 function render() {
     let shakeX = 0, shakeY = 0;
@@ -908,6 +935,7 @@ function render() {
         }
     }
 
+    drawFog();
     drawSpeedLines();
 
     if (shakeX !== 0 || shakeY !== 0) {
