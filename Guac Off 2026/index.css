@@ -548,3 +548,30 @@ body {
   background: #ff5500;
   color: #1b4d3e;
 }
+
+/* Finish-line CTA — shown when raceFinished is true */
+#see-details-btn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, calc(-50% + 170px)); /* below the canvas-drawn Play Again button which sits ~+100..+150 of canvas center */
+  z-index: 10;
+  background: #1b4d3e;
+  color: #ebd2b4;
+  border: 2px solid #ff5500;
+  font-family: var(--font-title);
+  font-size: 12px;
+  letter-spacing: 2px;
+  padding: 10px 18px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+#see-details-btn:hover {
+  background: #ff5500;
+  color: #1b4d3e;
+}
+
+#see-details-btn[hidden] {
+  display: none;
+}

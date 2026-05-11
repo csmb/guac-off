@@ -742,6 +742,7 @@ function gameLoop() {
         
         if (position >= segments.length * segmentLength) {
             raceFinished = true;
+            document.getElementById('see-details-btn').hidden = false;
             elapsedTime = (Date.now() - startTime) / 1000;
             playSound('fanfare');
         }
@@ -942,6 +943,7 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
     countdownActive = true;
     countdownStartTime = Date.now();
     raceFinished = false; // Reset race!
+    document.getElementById('see-details-btn').hidden = true;
     score = 0; // Reset score!
     init();
     playMusic();
@@ -963,6 +965,7 @@ document.addEventListener('click', (e) => {
             // Restart game!
             score = 0;
             raceFinished = false;
+            document.getElementById('see-details-btn').hidden = true;
             gameStarted = true;
             countdownActive = true;
             countdownStartTime = Date.now();
@@ -984,12 +987,18 @@ document.getElementById('scroll-hint').addEventListener('click', (e) => {
     document.getElementById('info').scrollIntoView({ behavior: 'smooth' });
 });
 
+document.getElementById('see-details-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('info').scrollIntoView({ behavior: 'smooth' });
+});
+
 window.addEventListener('touchstart', (e) => {
     if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
         e.preventDefault(); // Prevent selection on canvas/body!
     }
-    if (paused && gameStarted && 
-        e.target.id !== 'music-toggle' && e.target.id !== 'restart-btn') {
+    if (paused && gameStarted &&
+        e.target.id !== 'music-toggle' && e.target.id !== 'restart-btn' &&
+        e.target.id !== 'scroll-hint' && e.target.id !== 'see-details-btn') {
         paused = false;
     }
 }, { passive: false });
