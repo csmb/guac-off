@@ -488,3 +488,39 @@ body {
   margin-right: calc(var(--info-pad-x) * -1);
   margin-bottom: calc(var(--info-pad-b) * -1);
 }
+
+@media (max-width: 480px) {
+  #info {
+    --info-pad-x: 16px;
+    --info-pad-b: 40px;
+    padding: 40px var(--info-pad-x) var(--info-pad-b);
+  }
+
+  .info-intro {
+    font-size: 24px;
+  }
+
+  .info-essentials {
+    grid-template-columns: 64px 1fr;
+    font-size: 20px;
+    gap: 6px 10px;
+  }
+
+  .info-essentials dt {
+    font-size: 9px;
+  }
+
+  .info-schedule ol {
+    font-size: 20px;
+  }
+
+  .info-schedule li {
+    grid-template-columns: 110px 1fr;
+    gap: 8px;
+  }
+
+  .chips li {
+    font-size: 18px;
+    padding: 3px 12px;
+  }
+}
