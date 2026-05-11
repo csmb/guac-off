@@ -648,6 +648,31 @@ function drawParty() {
     }
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'left';
+
+    // Results card text (the PLAY AGAIN button is a DOM element shown separately)
+    const cardCx = canvas.width / 2;
+    const cardCy = canvas.height / 2;
+    const cardW = Math.min(420, canvas.width * 0.8);
+    const cardH = Math.round(120 * (canvas.height / 600));
+    ctx.fillStyle = 'rgba(13, 2, 33, 0.92)';
+    ctx.fillRect(cardCx - cardW / 2, cardCy - cardH / 2, cardW, cardH);
+    ctx.strokeStyle = '#ff007f';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(cardCx - cardW / 2, cardCy - cardH / 2, cardW, cardH);
+
+    ctx.textAlign = 'center';
+    ctx.font = `${Math.round(14 * (canvas.height / 600))}px "Press Start 2P", monospace`;
+    ctx.fillStyle = '#00ffff';
+    ctx.fillText('FINAL SCORE', cardCx, cardCy - cardH / 2 + 22);
+    ctx.fillStyle = '#ff007f';
+    ctx.font = `${Math.round(22 * (canvas.height / 600))}px "Press Start 2P", monospace`;
+    ctx.fillText(String(score).padStart(6, '0'), cardCx, cardCy - 4);
+    const fmin = Math.floor(elapsedTime / 60);
+    const fsec = (elapsedTime - fmin * 60).toFixed(1).padStart(4, '0');
+    ctx.font = `${Math.round(11 * (canvas.height / 600))}px "Press Start 2P", monospace`;
+    ctx.fillStyle = '#39ff14';
+    ctx.fillText(`TIME ${String(fmin).padStart(2, '0')}:${fsec}`, cardCx, cardCy + cardH / 2 - 14);
+    ctx.textAlign = 'left';
 }
 
 // Render
@@ -1118,6 +1143,7 @@ function gameLoop() {
             winnersCircleActive = true;
             currentSpeed = 0;
             seedConfetti();
+            document.getElementById('party-play-again').hidden = false;
         }
     }
 
@@ -1304,6 +1330,7 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
     decelStartTime = 0;
     winnersCircleActive = false;
     document.getElementById('see-details-btn').hidden = true;
+    document.getElementById('party-play-again').hidden = true;
     score = 0; // Reset score!
     init();
     playMusic();
@@ -1317,31 +1344,7 @@ document.addEventListener('click', (e) => {
     // Ignore clicks outside the game hero (e.g., in the info section below)
     if (!e.target.closest('#game-hero')) return;
 
-    if (raceFinished) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        // Button area: width / 2 - 100, height / 2 + 100, 200, 50
-        if (x > width / 2 - 100 && x < width / 2 + 100 &&
-            y > height / 2 + 100 && y < height / 2 + 150) {
-            // Restart game!
-            score = 0;
-            raceFinished = false;
-            decelStartTime = 0;
-            winnersCircleActive = false;
-            document.getElementById('see-details-btn').hidden = true;
-            gameStarted = true;
-            countdownActive = true;
-            countdownStartTime = Date.now();
-            lastCountdown = 4;
-            init();
-            playMusic();
-            return;
-        }
-    }
-    
-    if (gameStarted && 
+    if (gameStarted &&
         e.target.id !== 'music-toggle' && e.target.id !== 'restart-btn') {
         paused = !paused;
     }
@@ -1355,6 +1358,23 @@ document.getElementById('scroll-hint').addEventListener('click', (e) => {
 document.getElementById('see-details-btn').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('info').scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('party-play-again').addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Mirror the restart logic from the existing restart-btn handler
+    score = 0;
+    raceFinished = false;
+    winnersCircleActive = false;
+    decelStartTime = 0;
+    document.getElementById('party-play-again').hidden = true;
+    document.getElementById('see-details-btn').hidden = true;
+    gameStarted = true;
+    countdownActive = true;
+    countdownStartTime = Date.now();
+    lastCountdown = 4;
+    init();
+    playMusic();
 });
 
 window.addEventListener('touchstart', (e) => {
