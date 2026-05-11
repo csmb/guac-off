@@ -169,6 +169,66 @@ const cameraHeight = 2500;
 let cameraOffsetX = 0;
 const drawDistance = 200;
 
+// ===== SF emoji sprite roster =====
+// Each entry: { id, emoji, category, baseSize, scenes: { mttam, mission, ggp, market } }
+// `scenes` values are weights; 0 = never spawn on that scene.
+const SPRITE_LIBRARY = [
+    // Roadside props
+    { id: 'cable-car',     emoji: '🚋', category: 'prop',   baseSize: 110, scenes: { mttam: 0, mission: 1, ggp: 0, market: 5 } },
+    { id: 'bart',          emoji: '🚆', category: 'prop',   baseSize: 110, scenes: { mttam: 0, mission: 3, ggp: 0, market: 3 } },
+    { id: 'caltrain',      emoji: '🚉', category: 'prop',   baseSize: 110, scenes: { mttam: 0, mission: 2, ggp: 3, market: 1 } },
+    { id: 'f-line',        emoji: '🚊', category: 'prop',   baseSize: 110, scenes: { mttam: 0, mission: 1, ggp: 1, market: 4 } },
+    { id: 'lime-scooter',  emoji: '🛴', category: 'prop',   baseSize:  70, scenes: { mttam: 1, mission: 3, ggp: 2, market: 3 } },
+    { id: 'parked-bike',   emoji: '🚲', category: 'prop',   baseSize:  70, scenes: { mttam: 1, mission: 3, ggp: 4, market: 2 } },
+    { id: 'hydrant',       emoji: '🚒', category: 'prop',   baseSize:  60, scenes: { mttam: 2, mission: 4, ggp: 3, market: 3 } },
+    { id: 'palm',          emoji: '🌴', category: 'prop',   baseSize:  90, scenes: { mttam: 2, mission: 4, ggp: 1, market: 1 } },
+    { id: 'muni-stop',     emoji: '🚏', category: 'prop',   baseSize:  70, scenes: { mttam: 0, mission: 2, ggp: 2, market: 4 } },
+    { id: 'taqueria',      emoji: '🌮', category: 'prop',   baseSize:  80, scenes: { mttam: 0, mission: 5, ggp: 1, market: 2 } },
+    { id: 'recology',      emoji: '🗑️', category: 'prop',   baseSize:  60, scenes: { mttam: 1, mission: 3, ggp: 2, market: 3 } },
+    { id: 'meter',         emoji: '🅿️', category: 'prop',   baseSize:  60, scenes: { mttam: 0, mission: 3, ggp: 2, market: 4 } },
+    // People & creatures
+    { id: 'skater',        emoji: '🛹', category: 'person', baseSize:  70, scenes: { mttam: 3, mission: 3, ggp: 1, market: 1 } },
+    { id: 'dog-walker',    emoji: '🐕', category: 'person', baseSize:  70, scenes: { mttam: 2, mission: 1, ggp: 4, market: 1 } },
+    { id: 'mariachi',      emoji: '🎺', category: 'person', baseSize:  70, scenes: { mttam: 0, mission: 4, ggp: 1, market: 1 } },
+    { id: 'cyclist',       emoji: '🚴', category: 'person', baseSize:  70, scenes: { mttam: 1, mission: 1, ggp: 4, market: 3 } },
+    { id: 'seagull',       emoji: '🐦', category: 'creature', baseSize: 60, scenes: { mttam: 4, mission: 0, ggp: 3, market: 0 } },
+    { id: 'sea-lion',      emoji: '🦭', category: 'creature', baseSize: 80, scenes: { mttam: 3, mission: 0, ggp: 2, market: 0 } },
+];
+
+const LANDMARK_LIBRARY = [
+    { id: 'golden-gate',    emoji: '🌉', baseSize: 220, scenes: { mttam: 5, mission: 0, ggp: 4, market: 0 } },
+    { id: 'transamerica',   emoji: '🏛️', baseSize: 200, scenes: { mttam: 0, mission: 3, ggp: 0, market: 5 } },
+    { id: 'sutro',          emoji: '📡', baseSize: 200, scenes: { mttam: 5, mission: 1, ggp: 4, market: 1 } },
+    { id: 'painted-ladies', emoji: '🏘️', baseSize: 200, scenes: { mttam: 0, mission: 0, ggp: 5, market: 0 } },
+];
+
+// Spawned items: { z, x, side: 'left'|'right'|'horizon', sprite }
+const roadside = [];
+
+function pickSpriteForScene(scene, category) {
+    const pool = SPRITE_LIBRARY.filter(s => s.category === category && (s.scenes[scene] || 0) > 0);
+    if (pool.length === 0) return null;
+    const totalWeight = pool.reduce((sum, s) => sum + s.scenes[scene], 0);
+    let r = Math.random() * totalWeight;
+    for (const s of pool) {
+        r -= s.scenes[scene];
+        if (r <= 0) return s;
+    }
+    return pool[pool.length - 1];
+}
+
+function pickLandmarkForScene(scene) {
+    const pool = LANDMARK_LIBRARY.filter(l => (l.scenes[scene] || 0) > 0);
+    if (pool.length === 0) return null;
+    const totalWeight = pool.reduce((sum, l) => sum + l.scenes[scene], 0);
+    let r = Math.random() * totalWeight;
+    for (const l of pool) {
+        r -= l.scenes[scene];
+        if (r <= 0) return l;
+    }
+    return pool[pool.length - 1];
+}
+
 let currentVehicle = 'bike';
 let currentRoad = 'mttam';
 
@@ -254,6 +314,7 @@ function createRoad() {
     // Clear gameplay objects
     obstacles.length = 0;
     pickups.length = 0;
+    roadside.length = 0;
     
     const isMission = currentRoad === 'mission';
     
@@ -287,8 +348,35 @@ function createRoad() {
                 const type = INGREDIENTS[Math.floor(Math.random() * INGREDIENTS.length)];
                 pickups.push({ z: z, x: (Math.random() - 0.5) * 1.5, type: type });
             }
+            // Spawn roadside props (left and right)
+            const ROADSIDE_RATE = 0.06;
+            const PERSON_RATE = 0.02;
+            for (const side of ['left', 'right']) {
+                if (Math.random() < ROADSIDE_RATE) {
+                    const sprite = pickSpriteForScene(currentRoad, 'prop');
+                    if (sprite) {
+                        const x = side === 'left' ? -1.05 - Math.random() * 0.2 : 1.05 + Math.random() * 0.2;
+                        roadside.push({ z, x, side, sprite });
+                    }
+                }
+                if (Math.random() < PERSON_RATE) {
+                    const sprite = pickSpriteForScene(currentRoad, Math.random() < 0.5 ? 'person' : 'creature');
+                    if (sprite) {
+                        const x = side === 'left' ? -1.0 - Math.random() * 0.2 : 1.0 + Math.random() * 0.2;
+                        roadside.push({ z, x, side, sprite });
+                    }
+                }
+            }
         }
     }
+    // Fixed-position landmarks (parallax horizon)
+    const LANDMARK_POSITIONS = [12000, 28000, 42000];
+    LANDMARK_POSITIONS.forEach((z, i) => {
+        const sprite = pickLandmarkForScene(currentRoad);
+        if (sprite) {
+            roadside.push({ z, x: (i % 2 === 0 ? -0.3 : 0.3), side: 'horizon', sprite });
+        }
+    });
 }
 
 // Linear interpolate between two #rrggbb colors. t in [0,1].
