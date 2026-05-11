@@ -3,8 +3,9 @@ const ctx = canvas.getContext('2d');
 
 // Set canvas to full screen
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const hero = document.getElementById('game-hero') || canvas.parentElement;
+    canvas.width = hero.clientWidth;
+    canvas.height = hero.clientHeight;
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -953,7 +954,10 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
 
 document.addEventListener('click', (e) => {
     console.log(`Document click: paused=${paused}, gameStarted=${gameStarted}, target=${e.target.id}`);
-    
+
+    // Ignore clicks outside the game hero (e.g., in the info section below)
+    if (!e.target.closest('#game-hero')) return;
+
     if (raceFinished) {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -993,12 +997,13 @@ document.getElementById('see-details-btn').addEventListener('click', (e) => {
 });
 
 window.addEventListener('touchstart', (e) => {
-    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+    // Don't preventDefault on info-section content — users need to scroll/tap there
+    const inGameHero = e.target.closest && e.target.closest('#game-hero');
+    if (inGameHero && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
         e.preventDefault(); // Prevent selection on canvas/body!
     }
-    if (paused && gameStarted &&
-        e.target.id !== 'music-toggle' && e.target.id !== 'restart-btn' &&
-        e.target.id !== 'scroll-hint' && e.target.id !== 'see-details-btn') {
+    if (paused && gameStarted && inGameHero &&
+        e.target.id !== 'music-toggle' && e.target.id !== 'restart-btn') {
         paused = false;
     }
 }, { passive: false });

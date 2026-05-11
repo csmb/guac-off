@@ -15,19 +15,40 @@
   padding: 0;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   background-color: var(--bg-color);
   color: #fff;
   font-family: var(--font-body);
   font-size: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .game-container {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  height: 50vh;
+  flex: 0 0 50vh;
   background-color: #000;
   overflow: hidden;
+}
+
+/* Info section becomes the bottom half — internally scrollable if content overflows */
+#info {
+  flex: 0 0 50vh;
+  height: 50vh;
+  overflow-y: auto;
+}
+
+/* In-canvas hint and finish CTA are no-ops when info is always visible */
+#scroll-hint,
+#see-details-btn {
+  display: none !important;
 }
 
 #game-canvas {
