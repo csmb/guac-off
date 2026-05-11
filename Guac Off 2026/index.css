@@ -414,7 +414,7 @@ body {
 
 .info-intro {
   text-align: center;
-  font-size: 30px;
+  font-size: 42px;
   line-height: 1.1;
   font-weight: normal; /* VT323 reads better at normal weight */
 }
@@ -428,10 +428,11 @@ body {
   margin-top: -10px; /* tighten against the title — they're one unit */
 }
 
-/* Essentials label-strip grid */
+/* Essentials label-strip grid — label column auto-sizes to the widest label
+   so the orange background always covers every label fully */
 .info-essentials {
   display: grid;
-  grid-template-columns: 80px 1fr;
+  grid-template-columns: auto 1fr;
   gap: 8px 16px;
   font-size: 22px;
   line-height: 1.3;
@@ -443,7 +444,7 @@ body {
   font-weight: bold;
   letter-spacing: 1px;
   text-align: center;
-  padding: 4px 0;
+  padding: 4px 10px;
   font-family: var(--font-title); /* Press Start 2P */
   font-size: 11px;
   display: flex;
@@ -509,9 +510,17 @@ body {
   color: var(--info-cream);
 }
 
-/* Footer dropped — "no double dipping" already lives in the RULE row above. */
+/* Footer — tiny line at the bottom of the info panel */
 #info-footer {
-  display: none;
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--info-cream);
+  opacity: 0.65;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(235, 210, 180, 0.3); /* fallback */
+  border-top: 1px dashed rgb(from var(--info-cream) r g b / 0.3);
 }
 
 /* Tighter at narrow widths so the whole panel fits in 50vh on phones */
@@ -533,14 +542,14 @@ body {
   }
 
   .info-essentials {
-    grid-template-columns: 64px 1fr;
+    grid-template-columns: auto 1fr;
     font-size: 17px;
     gap: 5px 12px;
   }
 
   .info-essentials dt {
     font-size: 9px;
-    padding: 3px 0;
+    padding: 3px 8px;
   }
 
   .info-schedule h3,
