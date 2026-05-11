@@ -317,7 +317,7 @@ function createRoad() {
     
     const isMission = currentRoad === 'mission';
     
-    for (let n = 0; n < 1000; n++) {
+    for (let n = 0; n < 250; n++) {
         const z = n * segmentLength;
         
         if (!isMission && n > curveLength) {
@@ -339,7 +339,7 @@ function createRoad() {
         y = nextY;
         
         // Spawn obstacles and pickups
-        if (n > 50 && n < 900) { // Don't spawn right at start or end (length 1000)
+        if (n > 12 && n < 225) { // Don't spawn right at start or end (length 250)
             if (Math.random() < 0.02) { // 2% chance per segment
                 obstacles.push({ z: z, x: (Math.random() - 0.5) * 1.5 }); // x is -0.75 to 0.75
             }
@@ -349,6 +349,20 @@ function createRoad() {
             }
         }
     }
+}
+
+// Linear interpolate between two #rrggbb colors. t in [0,1].
+function lerpColor(c1, c2, t) {
+    const r1 = parseInt(c1.slice(1, 3), 16);
+    const g1 = parseInt(c1.slice(3, 5), 16);
+    const b1 = parseInt(c1.slice(5, 7), 16);
+    const r2 = parseInt(c2.slice(1, 3), 16);
+    const g2 = parseInt(c2.slice(3, 5), 16);
+    const b2 = parseInt(c2.slice(5, 7), 16);
+    const r = Math.round(r1 + (r2 - r1) * t);
+    const g = Math.round(g1 + (g2 - g1) * t);
+    const b = Math.round(b1 + (b2 - b1) * t);
+    return `rgb(${r},${g},${b})`;
 }
 
 // Project 3D to 2D
@@ -550,7 +564,7 @@ function render() {
         project(p2, width, height);
         
         if (p2.z > position) {
-            ctx.fillStyle = Math.floor(n / 3) % 2 ? style.grassColor1 : style.grassColor2;
+            ctx.fillStyle = lerpColor(style.grassColor1, style.grassColor2, n / (segments.length - 1));
             
             // Left grass
             ctx.beginPath();
@@ -599,7 +613,7 @@ function render() {
             }
             
             // Draw road
-            ctx.fillStyle = segment.isBridge ? segment.color : (Math.floor(n / 3) % 2 ? '#2c2c2c' : '#1e1e1e');
+            ctx.fillStyle = segment.isBridge ? segment.color : lerpColor('#2c2c2c', '#1e1e1e', n / (segments.length - 1));
             ctx.beginPath();
             ctx.moveTo(p1.screenX - p1.screenWidth, p1.screenY);
             ctx.lineTo(p1.screenX + p1.screenWidth, p1.screenY);
@@ -625,7 +639,7 @@ function render() {
             }
             
             // Draw rumble strips
-            ctx.fillStyle = segment.isBridge ? segment.rumble : (Math.floor(n / 3) % 2 ? style.rumbleColor1 : style.rumbleColor2);
+            ctx.fillStyle = segment.isBridge ? segment.rumble : style.rumbleColor2;
             const rumble1 = p1.screenWidth * 0.1;
             const rumble2 = p2.screenWidth * 0.1;
             
