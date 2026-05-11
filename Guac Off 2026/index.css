@@ -367,10 +367,16 @@ body {
 /* ============ Info section (below game hero) ============ */
 
 #info {
-  background: #1b4d3e;
-  color: #ebd2b4;
+  --info-bg: #1b4d3e;
+  --info-cream: #ebd2b4;
+  --info-orange: #ff5500;
+  --info-pad-x: 20px;
+  --info-pad-b: 56px;
+
+  background: var(--info-bg);
+  color: var(--info-cream);
   font-family: var(--font-body); /* VT323 */
-  padding: 56px 20px;
+  padding: 56px var(--info-pad-x) var(--info-pad-b);
 }
 
 #info > * {
@@ -400,8 +406,8 @@ body {
 }
 
 .info-essentials dt {
-  background: #ff5500;
-  color: #ebd2b4;
+  background: var(--info-orange);
+  color: var(--info-cream);
   font-weight: bold;
   letter-spacing: 1px;
   text-align: center;
@@ -423,7 +429,7 @@ body {
 .info-awards h3 {
   font-family: var(--font-title);
   font-size: 14px;
-  color: #ff5500;
+  color: var(--info-orange);
   letter-spacing: 2px;
   margin-bottom: 16px;
   text-align: center;
@@ -444,7 +450,7 @@ body {
 }
 
 .info-schedule .time {
-  color: #ff5500;
+  color: var(--info-orange);
 }
 
 /* Award chips */
@@ -458,28 +464,27 @@ body {
 }
 
 .chips li {
-  border: 2px solid #ff5500;
+  border: 2px solid var(--info-orange);
   border-radius: 999px;
   padding: 4px 14px;
   font-size: 20px;
-  color: #ebd2b4;
-  background: transparent;
+  color: var(--info-cream);
 }
 
 /* Footer */
 #info-footer {
-  background: #1b4d3e;
-  color: #ebd2b4;
+  background: var(--info-bg);
+  color: var(--info-cream);
   text-align: center;
   font-family: var(--font-title);
   font-size: 10px;
   letter-spacing: 2px;
   padding: 20px;
-  border-top: 1px dashed rgba(235, 210, 180, 0.3);
-  /* override #info > * + * margin-top so footer sits flush */
+  border-top: 1px dashed rgb(from var(--info-cream) r g b / 0.3);
+  /* span flush with #info's padded edges; uses the same vars as #info's padding */
   margin-top: 0;
   max-width: none;
-  margin-left: -20px;
-  margin-right: -20px;
-  margin-bottom: -56px;
+  margin-left: calc(var(--info-pad-x) * -1);
+  margin-right: calc(var(--info-pad-x) * -1);
+  margin-bottom: calc(var(--info-pad-b) * -1);
 }
