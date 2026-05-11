@@ -186,7 +186,6 @@ const roadStyles = {
 
 // Game State
 let position = 0;
-let lastAutoScrollTime = 0;
 let paused = true; // Start paused for menu
 let gameStarted = false;
 
@@ -383,21 +382,10 @@ function project(p, width, height) {
     p.screenY = (height / 2) + (cameraHeight - p.y) * sp * (height / 2);
     p.screenWidth = roadWidth * sp * 600;
 }
-function handleScroll() {
-    if (Date.now() - lastAutoScrollTime < 100) return; // Ignore events triggered by auto-scroll
-    position = window.scrollY * 10;
-    if (position > (segments.length - drawDistance) * segmentLength) {
-        position = (segments.length - drawDistance) * segmentLength;
-    }
-}
-
 // Init
 function init() {
     createRoad();
-    
-    // Set scroll height based on road length
-    document.body.style.height = (segments.length * segmentLength / 10) + 'px';
-    
+
     // Reset scroll position to start on refresh
     if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
@@ -431,9 +419,6 @@ function init() {
             window.addEventListener('deviceorientation', handleOrientation);
         }
     }
-    
-    // Scroll interaction for progression
-    window.addEventListener('scroll', handleScroll);
     
     // Pause interaction
     window.addEventListener('keydown', (e) => {
@@ -1053,9 +1038,6 @@ function gameLoop() {
             }
         }
         
-        // Sync scrollbar
-        lastAutoScrollTime = Date.now();
-        window.scrollTo(0, position / 10);
     }
     
     render();
