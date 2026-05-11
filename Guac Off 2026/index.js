@@ -489,6 +489,47 @@ function drawSpeedLines() {
     ctx.restore();
 }
 
+function drawRoadside() {
+    // Pick visible sprites and draw back-to-front so closer overlap farther.
+    const visible = [];
+    for (const item of roadside) {
+        if (item.z > position && item.z < position + drawDistance * segmentLength) {
+            visible.push(item);
+        }
+    }
+    visible.sort((a, b) => b.z - a.z);
+
+    for (const item of visible) {
+        if (item.side === 'horizon') continue; // landmarks rendered separately in Task 7
+        drawWorldEmoji(item);
+    }
+}
+
+function drawWorldEmoji(item) {
+    // Project the item's world position to screen using the same math obstacles use
+    const segIndex = Math.floor(item.z / segmentLength);
+    const seg = segments[segIndex];
+    if (!seg) return;
+
+    const p = { x: item.x * roadWidth, y: seg.p1.y, z: item.z };
+    project(p, canvas.width, canvas.height);
+    if (p.screenY > canvas.height || p.screenY < 0) return;
+
+    const scale = p.screenWidth / roadWidth;
+    const size = Math.max(6, item.sprite.baseSize * scale);
+    if (size < 6) return;
+
+    // Light animations: sea-lion bobs vertically, seagull drifts horizontally
+    let dx = 0, dy = 0;
+    if (item.sprite.id === 'sea-lion') dy = Math.sin(Date.now() / 400 + item.z * 0.001) * 4 * scale;
+    if (item.sprite.id === 'seagull')  dx = Math.sin(Date.now() / 200 + item.z * 0.001) * 30 * scale;
+
+    ctx.textBaseline = 'bottom';
+    ctx.font = `${size}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.fillText(item.sprite.emoji, p.screenX - size / 2 + dx, p.screenY + dy);
+    ctx.textBaseline = 'alphabetic';
+}
+
 // Render
 function render() {
     let shakeX = 0, shakeY = 0;
@@ -664,6 +705,8 @@ function render() {
         }
     }
     
+    drawRoadside();
+
     // Draw Obstacles (Cones)
     obstacles.forEach(o => {
         if (o.z <= position) return; // Behind camera
