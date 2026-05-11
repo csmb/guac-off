@@ -390,40 +390,53 @@ body {
   --info-bg: #1b4d3e;
   --info-cream: #ebd2b4;
   --info-orange: #ff5500;
-  --info-pad-t: 56px;
+  --info-pad-t: 16px;
   --info-pad-x: 20px;
-  --info-pad-b: 56px;
+  --info-pad-b: 10px;
 
   background: var(--info-bg);
   color: var(--info-cream);
   font-family: var(--font-body); /* VT323 */
   padding: var(--info-pad-t) var(--info-pad-x) var(--info-pad-b);
+  overflow: hidden; /* one-screen layout: never scroll, just clip if too tall */
+  display: flex;
+  flex-direction: column;
 }
 
 #info > * {
   max-width: 640px;
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
 }
 
 #info > * + * {
-  margin-top: 40px;
+  margin-top: 12px;
 }
 
 .info-intro {
   text-align: center;
-  font-size: 28px;
-  line-height: 1.3;
+  font-size: 22px;
+  line-height: 1.15;
   font-weight: normal; /* VT323 reads better at normal weight */
+}
+
+.info-subtitle {
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.2;
+  font-style: italic;
+  opacity: 0.9;
+  margin-top: 2px !important; /* sit tight under the title */
 }
 
 /* Essentials label-strip grid */
 .info-essentials {
   display: grid;
-  grid-template-columns: 72px 1fr;
-  gap: 6px 14px;
-  font-size: 22px;
-  line-height: 1.4;
+  grid-template-columns: 60px 1fr;
+  gap: 4px 12px;
+  font-size: 18px;
+  line-height: 1.2;
 }
 
 .info-essentials dt {
@@ -434,7 +447,7 @@ body {
   text-align: center;
   padding: 2px 0;
   font-family: var(--font-title); /* Press Start 2P */
-  font-size: 11px;
+  font-size: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -445,14 +458,14 @@ body {
   align-self: center;
 }
 
-/* Schedule */
+/* Schedule and Awards section headings */
 .info-schedule h3,
 .info-awards h3 {
   font-family: var(--font-title);
-  font-size: 14px;
+  font-size: 10px;
   color: var(--info-orange);
   letter-spacing: 2px;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
   text-align: center;
   font-weight: normal;
 }
@@ -460,14 +473,18 @@ body {
 .info-schedule ol {
   list-style: none;
   padding: 0;
-  font-size: 22px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.25;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 14px;
 }
 
 .info-schedule li {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 12px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
 }
 
 .info-schedule .time {
@@ -480,71 +497,84 @@ body {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px 6px;
   justify-content: center;
 }
 
 .chips li {
-  border: 2px solid var(--info-orange);
+  border: 1.5px solid var(--info-orange);
   border-radius: 999px;
-  padding: 4px 14px;
-  font-size: 20px;
+  padding: 1px 9px;
+  font-size: 14px;
+  line-height: 1.2;
   color: var(--info-cream);
 }
 
-/* Footer */
+/* Footer — pushed to the bottom of the flex column */
 #info-footer {
   background: var(--info-bg);
   color: var(--info-cream);
   text-align: center;
   font-family: var(--font-title);
-  font-size: 10px;
+  font-size: 8px;
   letter-spacing: 2px;
-  padding: 20px;
-  border-top: 1px dashed rgba(235, 210, 180, 0.3); /* fallback for browsers without CSS Color 5 relative-color syntax */
+  padding: 6px 0 0;
+  margin-top: auto !important; /* spring to the bottom of #info */
+  border-top: 1px dashed rgba(235, 210, 180, 0.3); /* fallback */
   border-top: 1px dashed rgb(from var(--info-cream) r g b / 0.3);
-  /* span flush with #info's padded edges; uses the same vars as #info's padding */
-  margin-top: 0;
   max-width: none;
   margin-left: calc(var(--info-pad-x) * -1);
   margin-right: calc(var(--info-pad-x) * -1);
   margin-bottom: calc(var(--info-pad-b) * -1);
+  padding-bottom: var(--info-pad-b);
+  padding-left: var(--info-pad-x);
+  padding-right: var(--info-pad-x);
 }
 
-/* info section — narrower break than the game overlay's 600px because it can tighten earlier without losing readability */
+/* Tighter still at narrow widths so everything fits in 50vh on phones */
 @media (max-width: 480px) {
   #info {
-    --info-pad-t: 40px;
-    --info-pad-x: 16px;
-    --info-pad-b: 40px;
+    --info-pad-t: 12px;
+    --info-pad-x: 14px;
+    --info-pad-b: 8px;
+  }
+
+  #info > * + * {
+    margin-top: 8px;
   }
 
   .info-intro {
-    font-size: 24px;
+    font-size: 19px;
+  }
+
+  .info-subtitle {
+    font-size: 13px;
   }
 
   .info-essentials {
-    grid-template-columns: 64px 1fr;
-    font-size: 20px;
-    gap: 6px 10px;
+    grid-template-columns: 56px 1fr;
+    font-size: 16px;
+    gap: 3px 10px;
   }
 
   .info-essentials dt {
+    font-size: 8px;
+  }
+
+  .info-schedule h3,
+  .info-awards h3 {
     font-size: 9px;
+    margin-bottom: 4px;
   }
 
   .info-schedule ol {
-    font-size: 20px;
-  }
-
-  .info-schedule li {
-    grid-template-columns: 120px 1fr;
-    gap: 8px;
+    font-size: 14px;
+    column-gap: 10px;
   }
 
   .chips li {
-    font-size: 18px;
-    padding: 3px 12px;
+    font-size: 12px;
+    padding: 1px 7px;
   }
 }
 
