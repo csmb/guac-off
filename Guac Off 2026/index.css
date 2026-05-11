@@ -469,6 +469,10 @@ body {
   font-weight: normal;
 }
 
+.info-awards h3 {
+  font-size: 10px;
+}
+
 .info-schedule ol {
   list-style: none;
   padding: 0;
@@ -504,8 +508,8 @@ body {
 .chips li {
   border: 2px solid var(--info-orange);
   border-radius: 999px;
-  padding: 3px 12px;
-  font-size: 16px;
+  padding: 2px 10px;
+  font-size: 13px;
   line-height: 1.25;
   color: var(--info-cream);
 }
@@ -514,7 +518,7 @@ body {
 #info-footer {
   text-align: center;
   font-family: var(--font-title);
-  font-size: 9px;
+  font-size: 7px;
   letter-spacing: 2px;
   color: var(--info-cream);
   opacity: 0.65;
@@ -568,8 +572,8 @@ body {
   }
 
   .chips li {
-    font-size: 13px;
-    padding: 2px 9px;
+    font-size: 11px;
+    padding: 1px 8px;
   }
 }
 
