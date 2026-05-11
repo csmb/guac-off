@@ -163,6 +163,25 @@ let winnersCircleActive = false;  // will be set by Task 9 — declared here so 
 let decelStartTime = 0;        // when the glide started
 let decelStartSpeed = 0;       // currentSpeed at finish
 
+const CONFETTI_COLORS = ['#1b4d3e', '#ebd2b4', '#ff5500', '#ffffff', '#ff007f', '#39ff14', '#00ffff'];
+const confetti = []; // { x, y, vx, vy, color, size, rot, vr }
+
+function seedConfetti() {
+    confetti.length = 0;
+    for (let i = 0; i < 80; i++) {
+        confetti.push({
+            x: Math.random() * (canvas.width || 800),
+            y: -20 - Math.random() * 400,
+            vx: (Math.random() - 0.5) * 1.5,
+            vy: 1 + Math.random() * 3,
+            color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+            size: 4 + Math.random() * 6,
+            rot: Math.random() * Math.PI * 2,
+            vr: (Math.random() - 0.5) * 0.2,
+        });
+    }
+}
+
 const ingredientImgs = {};
 INGREDIENTS.forEach(ing => {
     ingredientImgs[ing] = new Image();
@@ -583,6 +602,54 @@ function drawFog() {
     }
 }
 
+function drawParty() {
+    if (!winnersCircleActive) return;
+
+    // Dim the road behind the party
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Confetti
+    for (const c of confetti) {
+        c.x += c.vx + Math.sin(Date.now() / 600 + c.y * 0.01) * 0.3;
+        c.y += c.vy;
+        c.rot += c.vr;
+        if (c.y > canvas.height + 20) {
+            c.y = -20;
+            c.x = Math.random() * canvas.width;
+        }
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rot);
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
+        ctx.restore();
+    }
+
+    // Banner — "🎉 WELCOME TO THE GUAC OFF 🎉" with subtle bob
+    const bob = Math.sin(Date.now() / 400) * 4;
+    ctx.textAlign = 'center';
+    const bannerSize = Math.round(28 * (canvas.height / 600));
+    ctx.font = `${bannerSize}px "Press Start 2P", monospace`;
+    ctx.fillStyle = '#000000';
+    ctx.fillText('🎉 WELCOME TO THE GUAC OFF 🎉', canvas.width / 2 + 3, canvas.height * 0.18 + bob + 3);
+    ctx.fillStyle = '#ebd2b4';
+    ctx.fillText('🎉 WELCOME TO THE GUAC OFF 🎉', canvas.width / 2, canvas.height * 0.18 + bob);
+
+    // Party crowd row near the bottom — each emoji bobs independently
+    const crowd = ['🥳', '💃', '🕺', '🍻', '🥑', '🎺', '🌮', '🥑'];
+    const crowdSize = Math.round(60 * (canvas.height / 600));
+    ctx.font = `${crowdSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.textBaseline = 'bottom';
+    const gap = canvas.width / (crowd.length + 1);
+    for (let i = 0; i < crowd.length; i++) {
+        const cb = Math.sin(Date.now() / 300 + i) * 6;
+        ctx.fillText(crowd[i], (i + 1) * gap, canvas.height * 0.85 + cb);
+    }
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+}
+
 // Render
 function render() {
     let shakeX = 0, shakeY = 0;
@@ -938,6 +1005,7 @@ function render() {
     }
 
     drawFog();
+    drawParty();
     drawSpeedLines();
 
     if (shakeX !== 0 || shakeY !== 0) {
@@ -1049,6 +1117,7 @@ function gameLoop() {
         if (t >= 1) {
             winnersCircleActive = true;
             currentSpeed = 0;
+            seedConfetti();
         }
     }
 
@@ -1144,30 +1213,6 @@ function gameLoop() {
         ctx.fillStyle = '#00ffff';
         ctx.fillText('GO!', canvas.width / 2, canvas.height / 2 + 50);
         ctx.textAlign = 'left';
-    }
-    
-    // Big Finish
-    if (raceFinished) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, width, height);
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 50px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText("You made it to the Guac Off!", width / 2, height / 2 - 100);
-        
-        ctx.font = '30px Arial';
-        ctx.fillText(`Final Score: ${score}`, width / 2, height / 2);
-        ctx.fillText(`Final Time: ${displayTime.toFixed(1)}s`, width / 2, height / 2 + 50);
-        
-        // Draw Play Again button
-        ctx.fillStyle = '#ff00ff';
-        ctx.fillRect(width / 2 - 100, height / 2 + 100, 200, 50);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px Arial';
-        ctx.fillText("PLAY AGAIN", width / 2, height / 2 + 130);
-        
-        ctx.textAlign = 'left'; // Reset
     }
     
     const debugDiv = document.getElementById('debug-overlay');
