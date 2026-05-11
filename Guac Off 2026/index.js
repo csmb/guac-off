@@ -1,11 +1,19 @@
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
-// Set canvas to full screen
+const hud = { scoreSize: 28, speedSize: 36, labelSize: 11, pad: 24 };
+
 function resizeCanvas() {
     const hero = document.getElementById('game-hero') || canvas.parentElement;
     canvas.width = hero.clientWidth;
     canvas.height = hero.clientHeight;
+
+    // Scale HUD font sizes off canvas height (baseline 600px)
+    const k = Math.max(0.6, Math.min(1.3, canvas.height / 600));
+    hud.scoreSize = Math.round(28 * k);
+    hud.speedSize = Math.round(36 * k);
+    hud.labelSize = Math.round(11 * k);
+    hud.pad = Math.round(24 * k);
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -802,13 +810,49 @@ function gameLoop() {
     
     render();
     
-    // Draw Score and Time
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 30px Arial';
-    ctx.fillText(`Score: ${score}`, 20, 100);
+    // Pixel HUD — top-left SCORE+TIME, top-right SPEED
     const displayTime = raceFinished ? elapsedTime : (gameStarted && !countdownActive ? ((Date.now() - startTime) / 1000) : 0);
-    ctx.fillText(`Time: ${displayTime.toFixed(1)}s`, 20, 130);
-    ctx.fillText(`Speed: ${Math.floor(currentSpeed)} MPH`, 20, 160);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+
+    // SCORE (top-left)
+    ctx.font = `${hud.labelSize}px "Press Start 2P", monospace`;
+    ctx.fillStyle = '#00ffff';
+    ctx.fillText('SCORE', hud.pad, hud.pad);
+    ctx.font = `${hud.scoreSize}px "Press Start 2P", monospace`;
+    ctx.fillStyle = '#000000';
+    ctx.fillText(String(score).padStart(6, '0'), hud.pad + 2, hud.pad + hud.labelSize + 4 + 2); // shadow
+    ctx.fillStyle = '#ff007f';
+    ctx.fillText(String(score).padStart(6, '0'), hud.pad, hud.pad + hud.labelSize + 4);
+
+    // TIME (below SCORE)
+    const min = Math.floor(displayTime / 60);
+    const sec = (displayTime - min * 60).toFixed(1).padStart(4, '0');
+    const timeStr = `${String(min).padStart(2, '0')}:${sec}`;
+    const timeY = hud.pad + hud.labelSize + 4 + hud.scoreSize + 16;
+    ctx.font = `${hud.labelSize}px "Press Start 2P", monospace`;
+    ctx.fillStyle = '#00ffff';
+    ctx.fillText('TIME', hud.pad, timeY);
+    ctx.font = `${Math.round(hud.scoreSize * 0.7)}px "Press Start 2P", monospace`;
+    ctx.fillStyle = '#000000';
+    ctx.fillText(timeStr, hud.pad + 2, timeY + hud.labelSize + 4 + 2);
+    ctx.fillStyle = '#39ff14';
+    ctx.fillText(timeStr, hud.pad, timeY + hud.labelSize + 4);
+
+    // SPEED (top-right)
+    const speedStr = String(Math.floor(currentSpeed)).padStart(3, '0');
+    ctx.textAlign = 'right';
+    ctx.font = `${hud.labelSize}px "Press Start 2P", monospace`;
+    ctx.fillStyle = '#00ffff';
+    ctx.fillText('SPEED MPH', width - hud.pad, hud.pad);
+    ctx.font = `${hud.speedSize}px "Press Start 2P", monospace`;
+    ctx.fillStyle = '#000000';
+    ctx.fillText(speedStr, width - hud.pad + 2, hud.pad + hud.labelSize + 4 + 2);
+    ctx.fillStyle = '#39ff14';
+    ctx.fillText(speedStr, width - hud.pad, hud.pad + hud.labelSize + 4);
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
     
     // Start Message and Countdown (with Scrim)
     if (countdownActive) {
