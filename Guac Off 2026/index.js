@@ -1362,13 +1362,14 @@ document.getElementById('see-details-btn').addEventListener('click', (e) => {
 
 document.getElementById('party-play-again').addEventListener('click', (e) => {
     e.stopPropagation();
-    // Mirror the restart logic from the existing restart-btn handler
+    // Mirror the restart logic from the existing start-btn handler
     score = 0;
     raceFinished = false;
     winnersCircleActive = false;
     decelStartTime = 0;
     document.getElementById('party-play-again').hidden = true;
     document.getElementById('see-details-btn').hidden = true;
+    paused = false;
     gameStarted = true;
     countdownActive = true;
     countdownStartTime = Date.now();
