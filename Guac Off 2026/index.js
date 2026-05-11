@@ -160,6 +160,8 @@ const fogBanks = [
     { x: 400,  y: 0.50, w: 500, speed: 0.3, alpha: 0.35 },
 ];
 let winnersCircleActive = false;  // will be set by Task 9 — declared here so drawFog can reference it
+let decelStartTime = 0;        // when the glide started
+let decelStartSpeed = 0;       // currentSpeed at finish
 
 const ingredientImgs = {};
 INGREDIENTS.forEach(ing => {
@@ -976,8 +978,10 @@ function gameLoop() {
         currentSpeed += (targetSpeed - currentSpeed) * 0.1; // Smooth transition
         position += currentSpeed;
         
-        if (position >= segments.length * segmentLength) {
+        if (position >= segments.length * segmentLength && !raceFinished) {
             raceFinished = true;
+            decelStartTime = Date.now();
+            decelStartSpeed = currentSpeed;
             document.getElementById('see-details-btn').hidden = false;
             elapsedTime = (Date.now() - startTime) / 1000;
             playSound('fanfare');
@@ -1033,11 +1037,23 @@ function gameLoop() {
                 }
             }
         }
-        
+
     }
-    
+
+    // Deceleration glide: race finished but winners circle not yet started
+    if (raceFinished && !winnersCircleActive) {
+        const elapsed = Date.now() - decelStartTime;
+        const t = Math.min(1, elapsed / 2000);
+        currentSpeed = decelStartSpeed * (1 - t);
+        position += currentSpeed;
+        if (t >= 1) {
+            winnersCircleActive = true;
+            currentSpeed = 0;
+        }
+    }
+
     render();
-    
+
     // Pixel HUD — top-left SCORE+TIME, top-right SPEED
     const displayTime = raceFinished ? elapsedTime : (gameStarted && !countdownActive ? ((Date.now() - startTime) / 1000) : 0);
     ctx.textAlign = 'left';
@@ -1240,6 +1256,8 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
     countdownActive = true;
     countdownStartTime = Date.now();
     raceFinished = false; // Reset race!
+    decelStartTime = 0;
+    winnersCircleActive = false;
     document.getElementById('see-details-btn').hidden = true;
     score = 0; // Reset score!
     init();
@@ -1265,6 +1283,8 @@ document.addEventListener('click', (e) => {
             // Restart game!
             score = 0;
             raceFinished = false;
+            decelStartTime = 0;
+            winnersCircleActive = false;
             document.getElementById('see-details-btn').hidden = true;
             gameStarted = true;
             countdownActive = true;
