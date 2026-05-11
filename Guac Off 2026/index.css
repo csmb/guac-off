@@ -45,16 +45,65 @@ body {
   overflow-y: auto;
 }
 
-/* In-canvas hint and finish CTA are no-ops when info is always visible */
+/* On desktop the info panel is always visible (50vh below the game),
+   so the scroll-hint and finish CTA are no-ops. Mobile re-enables
+   the scroll hint below. */
 #scroll-hint,
 #see-details-btn {
-  display: none !important;
+  display: none;
 }
 
 #game-canvas {
   width: 100%;
   height: 100%;
   image-rendering: pixelated;
+}
+
+/* ===== Mobile: switch from split layout to natural document scroll ===== */
+@media (max-width: 768px) {
+  html, body {
+    height: auto;
+    overflow: visible;
+  }
+
+  body {
+    display: block;
+  }
+
+  .game-container {
+    flex: none;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* prefers dynamic viewport on iOS so URL bar doesn't crop */
+  }
+
+  #info {
+    flex: none;
+    height: auto;
+    overflow: visible;
+    justify-content: flex-start; /* don't stretch to fill — let content flow naturally */
+  }
+
+  /* Persistent hint on the game so users know to scroll for details */
+  #scroll-hint {
+    display: block;
+    font-size: 8px;
+    padding: 10px 10px;
+    letter-spacing: 1px;
+  }
+
+  /* Shrink the always-on HUD buttons so they don't dominate a phone screen */
+  .music-toggle,
+  .restart-btn {
+    padding: 5px 10px;
+    font-size: 8px;
+    border-width: 1px;
+    box-shadow: 2px 2px 0px var(--text-color);
+    top: 10px;
+  }
+
+  .music-toggle { right: 10px; }
+  .restart-btn  { left: 10px; box-shadow: -2px 2px 0px var(--text-color); }
 }
 
 .ui-layer {
@@ -329,18 +378,42 @@ body {
   .menu-overlay {
     left: 50%;
     transform: translate(-50%, -50%);
+    padding: 18px;
+    max-width: 92vw;
+  }
+  .menu-overlay h1 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  .menu-step h2 {
+    font-size: 11px;
+    margin-bottom: 10px;
   }
   .selection-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
   }
   #road-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+  .grid-item p {
+    font-size: 14px;
   }
   .menu-step {
     display: none; /* Hide handled by JS */
   }
   .menu-step.active {
     display: block;
+  }
+  .menu-actions {
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .menu-overlay button {
+    padding: 10px 18px;
+    font-size: 11px;
+    box-shadow: 3px 3px 0px var(--accent-color);
   }
 }
 
