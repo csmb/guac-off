@@ -135,6 +135,8 @@ let raceFinished = false;
 let countdown = 3;
 let countdownActive = false;
 let countdownStartTime = 0;
+let countdownStepTime = 0;     // timestamp when current digit became active
+let goFlashUntil = 0;          // timestamp until which GO! flash is visible
 let currentSpeed = 0;
 const VEHICLE_SPEEDS = {
     'bike': 40,
@@ -769,6 +771,8 @@ function gameLoop() {
             if (countdown > 0) playSound('beep_low');
             else if (countdown === 0) playSound('beep_high');
             lastCountdown = countdown;
+            countdownStepTime = Date.now();
+            if (countdown === 0) goFlashUntil = Date.now() + 400;
         }
         
         if (countdown <= 0) {
@@ -897,25 +901,48 @@ function gameLoop() {
     // Start Message and Countdown (with Scrim)
     if (countdownActive) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, width, height);
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 30px Arial';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         ctx.textAlign = 'center';
-        ctx.fillText("The Guac Off is starting soon!", width / 2, height / 2 - 150);
-        ctx.font = '20px Arial';
-        ctx.fillText("Collect ingredients and make your way to the party.", width / 2, height / 2 - 100);
-        
-        // Countdown
-        if (countdown === 3) ctx.fillStyle = '#ff0000'; // Red
-        else if (countdown === 2) ctx.fillStyle = '#ffff00'; // Yellow
-        else if (countdown === 1) ctx.fillStyle = '#00ff00'; // Green
-        else ctx.fillStyle = '#ff00ff';
-        
-        ctx.font = 'bold 100px Arial';
-        ctx.fillText(countdown.toString(), width / 2, height / 2 + 50);
-        
-        ctx.textAlign = 'left'; // Reset
+        ctx.fillStyle = '#00ffff';
+        ctx.font = `${Math.round(20 * (canvas.height / 600))}px "Press Start 2P", monospace`;
+        ctx.fillText("THE GUAC OFF IS STARTING", canvas.width / 2, canvas.height / 2 - 150);
+        ctx.font = `${Math.round(11 * (canvas.height / 600))}px "Press Start 2P", monospace`;
+        ctx.fillStyle = '#ebd2b4';
+        ctx.fillText("collect ingredients · reach the party", canvas.width / 2, canvas.height / 2 - 110);
+
+        // Scale-in animation: start at 50%, ease to 100% over 200ms since this digit became active
+        const elapsed = Date.now() - countdownStepTime;
+        const scale = elapsed < 200 ? 0.5 + (elapsed / 200) * 0.5 : 1.0;
+        const baseSize = Math.round(110 * (canvas.height / 600));
+        const size = Math.round(baseSize * scale);
+
+        let digitColor = '#ff00ff';
+        if (countdown === 3) digitColor = '#ff007f';
+        else if (countdown === 2) digitColor = '#ffff00';
+        else if (countdown === 1) digitColor = '#39ff14';
+
+        ctx.font = `${size}px "Press Start 2P", monospace`;
+        ctx.fillStyle = '#000000';
+        ctx.fillText(countdown.toString(), canvas.width / 2 + 3, canvas.height / 2 + 50 + 3);
+        ctx.fillStyle = digitColor;
+        ctx.fillText(countdown.toString(), canvas.width / 2, canvas.height / 2 + 50);
+
+        ctx.textAlign = 'left';
+    }
+
+    // GO! flash — fires when countdown hits 0 and lingers ~400ms
+    if (Date.now() < goFlashUntil) {
+        const remain = (goFlashUntil - Date.now()) / 400;
+        ctx.fillStyle = `rgba(255,255,255,${remain * 0.6})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.textAlign = 'center';
+        ctx.font = `${Math.round(140 * (canvas.height / 600))}px "Press Start 2P", monospace`;
+        ctx.fillStyle = '#000000';
+        ctx.fillText('GO!', canvas.width / 2 + 4, canvas.height / 2 + 50 + 4);
+        ctx.fillStyle = '#00ffff';
+        ctx.fillText('GO!', canvas.width / 2, canvas.height / 2 + 50);
+        ctx.textAlign = 'left';
     }
     
     // Big Finish
