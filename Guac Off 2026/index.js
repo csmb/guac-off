@@ -1,77 +1,6 @@
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
-// ==========================================
-// CONFIGURATION (Edit this easily!)
-// ==========================================
-const billboardStyles = {
-    bgColor: '#4a2c11',      // Dark brown wood
-    borderColor: '#2d1a0a',  // Darker brown wood
-    textColor: '#ffd700',     // Yellow text
-    titleSize: 100,          // Font size for title
-    detailsSize: 60          // Font size for details
-};
-
-const BILLBOARD_CATEGORIES = {
-    INFO_PRIMARY: {
-        bgColor: '#ff007f',      // Neon Pink
-        borderColor: '#00ffff',  // Cyan
-        textColor: '#ffffff',
-        fontFamily: "'VT323', monospace",
-        weight: 'bold',
-        scale: 1.5,
-        titleSize: 24,
-        detailsSize: 16
-    },
-    INFO_SECONDARY: {
-        bgColor: '#3d2b1f',      // Highway Brown
-        borderColor: '#ffffff',
-        textColor: '#ffffff',
-        fontFamily: "Arial, sans-serif",
-        weight: 'bold',
-        scale: 1.2,
-        titleSize: 20,
-        detailsSize: 12
-    },
-    INFO_PLAYFUL: {
-        bgColor: '#1b4d3e',      // Park Green
-        borderColor: '#ebd2b4',  // Cream
-        textColor: '#ebd2b4',
-        fontFamily: "cursive, sans-serif",
-        weight: 'normal',
-        scale: 1.0,
-        titleSize: 16,
-        detailsSize: 10
-    }
-};
-
-const billboards = [
-    { z: 2000, text: 'CLICK ANYWHERE TO START', details: 'Mobile: Tap anywhere', side: 'right', type: 'INFO_PLAYFUL' },
-    { z: 10000, text: 'SF GUAC OFF 2026', details: 'The Ultimate Guac Showdown', side: 'left', type: 'INFO_PRIMARY' },
-    { z: 15000, text: 'RIDER SIGNUP', details: 'Register now!', side: 'right', type: 'INFO_SECONDARY' },
-    { z: 30000, text: 'WHEN: SEPT 13, 2026', details: '1PM.', side: 'right', type: 'INFO_PRIMARY' },
-    { z: 50000, text: 'WHERE: ????', details: 'Location revealed soon.', side: 'left', type: 'INFO_PLAYFUL' },
-    { z: 70000, text: 'NO DOUBLE DIPPING', details: '', side: 'right', type: 'INFO_SECONDARY' },
-    { z: 90000, text: 'BYOF', details: 'Bring Your Old Friends', side: 'right', type: 'INFO_SECONDARY' },
-    { z: 110000, text: 'BYOB', details: 'Bring Your Own Bowl', side: 'left', type: 'INFO_PLAYFUL' },
-    { z: 130000, text: 'BE THERE!', details: 'Guac on.', side: 'right', type: 'INFO_SECONDARY' },
-    { z: 150000, text: 'SITE UNDER CONSTRUCTION', details: 'Watch your step.', side: 'left', type: 'INFO_PLAYFUL' },
-    { z: 170000, text: 'DIGGING IN PROGRESS', details: 'Guac is hard work.', side: 'right', type: 'INFO_SECONDARY' },
-    { z: 190000, text: 'COMING SOON', details: 'Full site loading.', side: 'left', type: 'INFO_PLAYFUL' },
-    { z: 210000, text: 'KEEP GOING!', details: 'You are flying.', side: 'right', type: 'INFO_SECONDARY' },
-    { z: 230000, text: 'GUAC FACT', details: 'Avocados are berries.', side: 'left', type: 'INFO_PLAYFUL' },
-    { z: 250000, text: 'ALMOST THERE?', details: 'Halfway mark.', side: 'right', type: 'INFO_SECONDARY' },
-    { z: 270000, text: 'SPEED LIMIT?', details: 'No limit here.', side: 'left' },
-    { z: 290000, text: 'GUAC ON', details: 'Keep pedaling.', side: 'right' },
-    { z: 310000, text: 'FINAL STRETCH', details: 'Push it.', side: 'left' },
-    { z: 330000, text: 'WINNER SOON', details: 'The crown awaits.', side: 'right' },
-    { z: 350000, text: 'GUAC OFF 2026', details: 'Don\'t miss it.', side: 'left' },
-    { z: 370000, text: 'THE END IS NEAR', details: 'Or is it?', side: 'right' },
-    { z: 390000, text: 'FINISH LINE', details: 'Enjoy the guac.', side: 'left' }
-];
-
-// ==========================================
-
 // Set canvas to full screen
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -456,49 +385,7 @@ function render() {
     cameraOffsetX += (targetCameraOffsetX - cameraOffsetX) * 0.1;
     
     ctx.clearRect(0, 0, width, height);
-    
-    // HUD Billboard for upcoming sign!
-    const upcomingBillboard = billboards.find(b => b.z > position);
-    let hud = document.getElementById('hud-billboard');
-    if (!hud) {
-        hud = document.createElement('div');
-        hud.id = 'hud-billboard';
-        document.body.appendChild(hud);
-    }
-    
-    if (upcomingBillboard) {
-        hud.style.display = 'block';
-        hud.style.position = 'fixed';
-        hud.style.top = '60px'; // Move lower!
-        hud.style.left = '50%';
-        hud.style.transform = 'translateX(-50%)';
-        hud.style.zIndex = '100000';
-        hud.style.padding = '15px';
-        hud.style.pointerEvents = 'none';
-        hud.style.textAlign = 'center';
-        hud.style.minWidth = '200px';
-        
-        hud.innerHTML = `<h3 style="margin:0; font-size:1.2rem;">${upcomingBillboard.text}</h3><p style="margin:5px 0 0 0; font-size:0.9rem;">${upcomingBillboard.details}</p>`;
-        
-        const cat = BILLBOARD_CATEGORIES[upcomingBillboard.type] || BILLBOARD_CATEGORIES.INFO_PLAYFUL;
-        hud.style.background = cat.bgColor;
-        hud.style.color = cat.textColor;
-        hud.style.border = `2px solid ${cat.borderColor}`;
-        hud.style.fontFamily = cat.fontFamily;
-        if (upcomingBillboard.type === 'INFO_PRIMARY') {
-            hud.style.borderRadius = '0';
-            hud.style.clipPath = 'polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%)';
-        } else if (upcomingBillboard.type === 'INFO_PLAYFUL') {
-            hud.style.borderRadius = '0';
-            hud.style.clipPath = 'polygon(0% 0%, 100% 5%, 100% 100%, 0% 95%)';
-        } else {
-            hud.style.borderRadius = '10px';
-            hud.style.clipPath = 'none';
-        }
-    } else {
-        hud.style.display = 'none';
-    }
-    
+
     // Draw Background (Static for now to handle hills better, or parallax)
     const style = roadStyles[currentRoad];
     if (style.bg && style.bg.complete) {
@@ -569,7 +456,7 @@ function render() {
         }
     }
 
-    // Pass 2: Draw road, rumble, billboards from back to front
+    // Pass 2: Draw road and rumble from back to front
     for (let n = maxSegments - 1; n >= startIndex; n--) {
         const segment = segments[n];
         
@@ -644,100 +531,6 @@ function render() {
             
 
         }
-    }
-    
-    // Draw Billboards on Canvas! (Hidden as requested)
-    if (false) {
-    billboards.forEach(b => {
-        if (b.z <= position) return; // Behind camera
-        
-        const segIndex = Math.floor(b.z / segmentLength);
-        const startIndex = Math.floor(position / segmentLength);
-        const drawDistance = isMobile ? 50 : 150;
-        const maxSegments = Math.min(segments.length, startIndex + drawDistance);
-        
-        if (segIndex >= startIndex && segIndex < maxSegments) {
-            const segment = segments[segIndex];
-            const p1 = segment.p1;
-            
-            const scale = p1.screenWidth / roadWidth;
-            const cat = BILLBOARD_CATEGORIES[b.type] || BILLBOARD_CATEGORIES.INFO_PLAYFUL;
-            
-            const w = (isMobile ? 250 : 300) * scale * 2 * cat.scale;
-            const h = (isMobile ? 80 : 100) * scale * 2 * cat.scale;
-            
-            const offset = isMobile ? w * 0.5 : w;
-            const x = b.side === 'left' 
-                ? p1.screenX - p1.screenWidth - offset - 10 * scale
-                : p1.screenX + p1.screenWidth + (isMobile ? 0 : 10 * scale);
-            
-            const billboardY = 1000;
-            const sp = cameraDepth / (b.z - position);
-            const billboardScreenY = (height / 2) + (cameraHeight - billboardY) * sp * (height / 2);
-            const y = billboardScreenY - h;
-            
-            // Draw on canvas!
-            ctx.save();
-            
-            // Draw background
-            ctx.fillStyle = cat.bgColor;
-            if (b.type === 'INFO_PRIMARY') {
-                // Draw slanted rect!
-                ctx.beginPath();
-                ctx.moveTo(x + w * 0.05, y);
-                ctx.lineTo(x + w, y);
-                ctx.lineTo(x + w * 0.95, y + h);
-                ctx.lineTo(x, y + h);
-                ctx.closePath();
-                ctx.fill();
-            } else if (b.type === 'INFO_PLAYFUL') {
-                // Draw slightly slanted top/bottom
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + w, y + h * 0.05);
-                ctx.lineTo(x + w, y + h);
-                ctx.lineTo(x, y + h * 0.95);
-                ctx.closePath();
-                ctx.fill();
-            } else {
-                ctx.fillRect(x, y, w, h);
-            }
-            
-            // Draw border
-            ctx.strokeStyle = cat.borderColor;
-            ctx.lineWidth = 2 * scale * 2;
-            if (b.type === 'INFO_PRIMARY' || b.type === 'INFO_PLAYFUL') {
-                ctx.stroke();
-            } else {
-                ctx.strokeRect(x, y, w, h);
-            }
-            
-            // Draw text
-            ctx.fillStyle = cat.textColor;
-            ctx.font = `${cat.weight} ${Math.floor(cat.titleSize * scale * 2)}px ${cat.fontFamily}`;
-            ctx.fillText(b.text, x + 10 * scale * 2, y + 30 * scale * 2);
-            ctx.font = `${Math.floor(cat.detailsSize * scale * 2)}px ${cat.fontFamily}`;
-            ctx.fillText(b.details, x + 10 * scale * 2, y + 60 * scale * 2);
-            
-            // Draw Exit tab for secondary (highway) if needed!
-            if (b.type === 'INFO_SECONDARY') {
-                const tabW = w * 0.3;
-                const tabH = h * 0.3;
-                const tabX = x + w * 0.6;
-                const tabY = y - tabH;
-                
-                ctx.fillStyle = cat.bgColor;
-                ctx.fillRect(tabX, tabY, tabW, tabH);
-                ctx.strokeRect(tabX, tabY, tabW, tabH);
-                
-                ctx.fillStyle = cat.textColor;
-                ctx.font = `${Math.floor(12 * scale * 2)}px ${cat.fontFamily}`;
-                ctx.fillText('EXIT 178', tabX + 5 * scale * 2, tabY + 15 * scale * 2);
-            }
-            
-            ctx.restore();
-        }
-    });
     }
     
     // Draw Obstacles (Cones)
@@ -915,41 +708,6 @@ function render() {
         }
     }
 }
-
-function drawBillboard(ctx, segment, billboard) {
-    const scale = segment.p1.screenWidth / roadWidth;
-    // Massive size increase
-    const w = 1200 * scale * 2;
-    const h = 400 * scale * 2;
-    
-    const isMobile = width < 600;
-    const offset = isMobile ? w * 0.5 : w;
-    const x = side === 'left' 
-        ? segment.p1.screenX - segment.p1.screenWidth - offset - 10 * scale
-        : segment.p1.screenX + segment.p1.screenWidth + (isMobile ? 0 : 10 * scale);
-        
-    const y = segment.p1.screenY - h - 50 * scale;
-    
-    // Draw sign
-    ctx.fillStyle = billboardStyles.bgColor;
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = billboardStyles.borderColor;
-    ctx.lineWidth = 10 * scale;
-    ctx.strokeRect(x, y, w, h);
-    
-    // Draw pole
-    ctx.fillStyle = '#2d1a0a'; // Dark wood pole
-    ctx.fillRect(x + w/2 - 15*scale, y + h, 30*scale, segment.p1.screenY - y - h);
-    
-    // Draw text
-    ctx.fillStyle = billboardStyles.textColor;
-    ctx.font = `bold ${Math.floor(billboardStyles.titleSize * scale * 2)}px 'VT323'`;
-    ctx.fillText(billboard.text, x + 30*scale, y + 120*scale);
-    
-    ctx.font = `bold ${Math.floor(60 * scale * 2)}px 'VT323'`;
-    ctx.fillText(billboard.details, x + 30*scale, y + 250*scale);
-}
-
 
 
 function gameLoop() {
