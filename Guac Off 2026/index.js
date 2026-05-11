@@ -530,6 +530,30 @@ function drawWorldEmoji(item) {
     ctx.textBaseline = 'alphabetic';
 }
 
+function drawLandmarks() {
+    for (const item of roadside) {
+        if (item.side !== 'horizon') continue;
+        const dz = item.z - position;
+        if (dz < -2000) continue;          // already passed
+        if (dz > drawDistance * segmentLength * 1.5) continue; // too far still
+
+        // Parallax: appear small far away, larger as the player approaches
+        const t = Math.max(0, Math.min(1, 1 - dz / (drawDistance * segmentLength)));
+        const size = Math.max(40, item.sprite.baseSize * (0.3 + t * 0.9));
+
+        // Anchor on the horizon line, offset by item.x for left/right placement
+        const horizonY = canvas.height * 0.42;
+        const sx = canvas.width * 0.5 + item.x * canvas.width * 0.35;
+
+        ctx.textBaseline = 'bottom';
+        ctx.font = `${size}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+        ctx.globalAlpha = 0.85;
+        ctx.fillText(item.sprite.emoji, sx - size / 2, horizonY);
+        ctx.globalAlpha = 1.0;
+        ctx.textBaseline = 'alphabetic';
+    }
+}
+
 // Render
 function render() {
     let shakeX = 0, shakeY = 0;
@@ -585,7 +609,9 @@ function render() {
         ctx.fillStyle = '#1a1a1a';
         ctx.fillRect(0, 0, width, height);
     }
-    
+
+    drawLandmarks();
+
     const startIndex = Math.floor(position / segmentLength);
     const maxSegments = Math.min(segments.length, startIndex + drawDistance);
     
