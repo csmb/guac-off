@@ -840,16 +840,17 @@ function gameLoop() {
     ctx.fillText(timeStr, hud.pad, timeY + hud.labelSize + 4);
 
     // SPEED (top-right)
+    const w = canvas.width;
     const speedStr = String(Math.floor(currentSpeed)).padStart(3, '0');
     ctx.textAlign = 'right';
     ctx.font = `${hud.labelSize}px "Press Start 2P", monospace`;
     ctx.fillStyle = '#00ffff';
-    ctx.fillText('SPEED MPH', width - hud.pad, hud.pad);
+    ctx.fillText('SPEED MPH', w - hud.pad, hud.pad);
     ctx.font = `${hud.speedSize}px "Press Start 2P", monospace`;
     ctx.fillStyle = '#000000';
-    ctx.fillText(speedStr, width - hud.pad + 2, hud.pad + hud.labelSize + 4 + 2);
+    ctx.fillText(speedStr, w - hud.pad + 2, hud.pad + hud.labelSize + 4 + 2);
     ctx.fillStyle = '#39ff14';
-    ctx.fillText(speedStr, width - hud.pad, hud.pad + hud.labelSize + 4);
+    ctx.fillText(speedStr, w - hud.pad, hud.pad + hud.labelSize + 4);
 
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
