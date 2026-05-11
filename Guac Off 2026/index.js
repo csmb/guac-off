@@ -148,6 +148,7 @@ const INGREDIENTS = ['avocado', 'jalapeno', 'onion', 'cilantro', 'lime', 'chip']
 let floatingTexts = [];
 let flyingObjects = [];
 let speedBonus = 0;
+let screenShake = { frames: 0, magnitude: 0 };
 let lastCountdown = 4;
 
 const ingredientImgs = {};
@@ -379,6 +380,16 @@ function init() {
 
 // Render
 function render() {
+    let shakeX = 0, shakeY = 0;
+    if (screenShake.frames > 0) {
+        shakeX = (Math.random() - 0.5) * 2 * screenShake.magnitude;
+        shakeY = (Math.random() - 0.5) * 2 * screenShake.magnitude;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+        screenShake.frames--;
+        screenShake.magnitude *= 0.85; // decay
+    }
+
     const width = canvas.width;
     const height = canvas.height;
     
@@ -716,6 +727,10 @@ function render() {
             ctx.globalAlpha = 1.0;
         }
     }
+
+    if (shakeX !== 0 || shakeY !== 0) {
+        ctx.restore();
+    }
 }
 
 
@@ -785,6 +800,7 @@ function gameLoop() {
                         life: 60 // 60 frames life
                     });
                     
+                    screenShake = { frames: 6, magnitude: 8 };
                     obstacles.splice(i, 1); // Remove it
                 }
             }
