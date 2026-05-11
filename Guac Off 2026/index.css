@@ -370,13 +370,14 @@ body {
   --info-bg: #1b4d3e;
   --info-cream: #ebd2b4;
   --info-orange: #ff5500;
+  --info-pad-t: 56px;
   --info-pad-x: 20px;
   --info-pad-b: 56px;
 
   background: var(--info-bg);
   color: var(--info-cream);
   font-family: var(--font-body); /* VT323 */
-  padding: 56px var(--info-pad-x) var(--info-pad-b);
+  padding: var(--info-pad-t) var(--info-pad-x) var(--info-pad-b);
 }
 
 #info > * {
@@ -489,11 +490,12 @@ body {
   margin-bottom: calc(var(--info-pad-b) * -1);
 }
 
+/* info section — narrower break than the game overlay's 600px because it can tighten earlier without losing readability */
 @media (max-width: 480px) {
   #info {
+    --info-pad-t: 40px;
     --info-pad-x: 16px;
     --info-pad-b: 40px;
-    padding: 40px var(--info-pad-x) var(--info-pad-b);
   }
 
   .info-intro {
@@ -515,7 +517,7 @@ body {
   }
 
   .info-schedule li {
-    grid-template-columns: 110px 1fr;
+    grid-template-columns: 120px 1fr;
     gap: 8px;
   }
 
