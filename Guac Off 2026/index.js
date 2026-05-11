@@ -378,6 +378,27 @@ function init() {
     requestAnimationFrame(gameLoop);
 }
 
+function drawSpeedLines() {
+    const speed = currentSpeed + speedBonus;
+    if (speed < 50) return;
+    const alpha = Math.min(0.6, (speed - 50) / 40 * 0.6);
+    const vx = canvas.width / 2, vy = canvas.height / 2;
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+    ctx.lineWidth = 2;
+    const n = 10;
+    for (let i = 0; i < n; i++) {
+        const angle = (i / n) * Math.PI * 2 + Math.random() * 0.3;
+        const r1 = 60 + Math.random() * 40;
+        const r2 = Math.max(canvas.width, canvas.height) * 0.7;
+        ctx.beginPath();
+        ctx.moveTo(vx + Math.cos(angle) * r1, vy + Math.sin(angle) * r1);
+        ctx.lineTo(vx + Math.cos(angle) * r2, vy + Math.sin(angle) * r2);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
 // Render
 function render() {
     let shakeX = 0, shakeY = 0;
@@ -727,6 +748,8 @@ function render() {
             ctx.globalAlpha = 1.0;
         }
     }
+
+    drawSpeedLines();
 
     if (shakeX !== 0 || shakeY !== 0) {
         ctx.restore();
