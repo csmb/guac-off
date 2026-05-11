@@ -481,6 +481,7 @@ body {
   font-size: 10px;
   letter-spacing: 2px;
   padding: 20px;
+  border-top: 1px dashed rgba(235, 210, 180, 0.3); /* fallback for browsers without CSS Color 5 relative-color syntax */
   border-top: 1px dashed rgb(from var(--info-cream) r g b / 0.3);
   /* span flush with #info's padded edges; uses the same vars as #info's padding */
   margin-top: 0;
