@@ -1,0 +1,3 @@
+http://www.missionguacparty.com/vendor/bootstrap/css/bootstrap.css
+http://www.missionguacparty.com/vendor/fontawesome/css/font-awesome.css
+http://www.missionguacparty.com/guacparty.gif
