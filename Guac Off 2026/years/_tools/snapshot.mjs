@@ -15,24 +15,43 @@ if (!ts || !originalUrl || !outDir) {
 
 const UA = { "User-Agent": "guac-off-archiver/1.0" };
 
-async function nearest(timestamp, url) {
-  // The wayback/available API is rate-limited (429) in some environments;
-  // resolve the closest capture via the CDX server instead.
-  const api = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&closest=${timestamp}&limit=8&filter=statuscode:200&fl=timestamp&output=json`;
+async function cdxQuery(url, extra) {
+  const api = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&filter=statuscode:200&fl=timestamp&output=json&collapse=timestamp:8&limit=4000${extra}`;
   for (let attempt = 0; attempt < 5; attempt++) {
     let r;
     try { r = await fetch(api, { headers: UA }); }
-    catch (e) { await new Promise(s => setTimeout(s, 2000 * (attempt + 1))); continue; }
+    catch { await new Promise(s => setTimeout(s, 2000 * (attempt + 1))); continue; }
     if (r.status === 200) {
       const rows = await r.json();
-      const data = Array.isArray(rows) ? rows.slice(1) : []; // row 0 is the header
-      if (data.length && data[0][0]) return data[0][0];
-      throw new Error(`no capture for ${url} near ${timestamp}`);
+      return (Array.isArray(rows) ? rows.slice(1) : []).map(x => x[0]).filter(Boolean);
     }
-    if (r.status === 429 || r.status === 503) { await new Promise(s => setTimeout(s, 2500 * (attempt + 1))); continue; }
+    if (r.status === 429 || r.status === 503 || r.status === 504) {
+      await new Promise(s => setTimeout(s, 2500 * (attempt + 1))); continue;
+    }
     throw new Error(`CDX HTTP ${r.status} for ${url}`);
   }
-  throw new Error(`CDX unavailable for ${url} after retries`);
+  throw new Error(`CDX unavailable for ${url}`);
+}
+
+function pickClosest(stamps, target) {
+  const t = BigInt(target.padEnd(14, "0"));
+  let best = null, bestD = null;
+  for (const s of stamps) {
+    const v = BigInt(s.padEnd(14, "0"));
+    const d = v > t ? v - t : t - v;
+    if (bestD === null || d < bestD) { bestD = d; best = s; }
+  }
+  return best;
+}
+
+async function nearest(timestamp, url) {
+  const y = parseInt(timestamp.slice(0, 4), 10);
+  // Prefer captures within a window around the target year; widen if none.
+  let stamps = await cdxQuery(url, `&from=${y - 1}0101000000&to=${y + 1}1231235959`);
+  if (!stamps.length) stamps = await cdxQuery(url, "");
+  const best = pickClosest(stamps, timestamp);
+  if (!best) throw new Error(`no capture for ${url} near ${timestamp}`);
+  return best;
 }
 
 const rawUrl = (stamp, u) => `https://web.archive.org/web/${stamp}id_/${u}`;
