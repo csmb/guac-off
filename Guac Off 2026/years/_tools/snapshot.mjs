@@ -129,22 +129,30 @@ async function run() {
   let html = (await fetchRes(originalUrl)).buf.toString("utf8");
   html = html.replace(/<!-- BEGIN WAYBACK TOOLBAR INSERT -->[\s\S]*?<!-- END WAYBACK TOOLBAR INSERT -->/g, "");
 
-  // 1. <style>...</style> blocks
+  // 1. <style>...</style> blocks (reverse-order index splice; no String.replace)
   const styleBlocks = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)];
-  for (const m of styleBlocks) {
-    const rewritten = await rewriteCss(m[1], originalUrl, 1, "assets/");
-    html = html.replace(m[1], rewritten);
+  for (let i = styleBlocks.length - 1; i >= 0; i--) {
+    const m = styleBlocks[i];
+    const rw = await rewriteCss(m[1], originalUrl, 1, "assets/");
+    const j = m[0].indexOf(m[1]);
+    const block = m[0].slice(0, j) + rw + m[0].slice(j + m[1].length);
+    html = html.slice(0, m.index) + block + html.slice(m.index + m[0].length);
   }
 
   // 2. inline style="...url()..." attributes
   const inlineStyles = [...html.matchAll(/style\s*=\s*"([^"]*url\([^"]*)"/gi)];
-  for (const m of inlineStyles) {
-    const rewritten = await rewriteCss(m[1], originalUrl, 1, "assets/");
-    html = html.replace(m[1], rewritten);
+  for (let i = inlineStyles.length - 1; i >= 0; i--) {
+    const m = inlineStyles[i];
+    const rw = await rewriteCss(m[1], originalUrl, 1, "assets/");
+    const j = m[0].indexOf(m[1]);
+    const block = m[0].slice(0, j) + rw + m[0].slice(j + m[1].length);
+    html = html.slice(0, m.index) + block + html.slice(m.index + m[0].length);
   }
 
   // 3. srcset attributes
-  for (const m of [...html.matchAll(/srcset\s*=\s*["']([^"']+)["']/gi)]) {
+  const srcsets = [...html.matchAll(/srcset\s*=\s*["']([^"']+)["']/gi)];
+  for (let i = srcsets.length - 1; i >= 0; i--) {
+    const m = srcsets[i];
     const parts = m[1].split(",").map(p => p.trim());
     const rebuilt = [];
     for (const part of parts) {
@@ -154,7 +162,10 @@ async function run() {
       const local = await fetchAsset(abs, 0);
       rebuilt.push([`assets/${local}`, ...desc].join(" "));
     }
-    html = html.replace(m[1], rebuilt.join(", "));
+    const val = rebuilt.join(", ");
+    const j = m[0].indexOf(m[1]);
+    const block = m[0].slice(0, j) + val + m[0].slice(j + m[1].length);
+    html = html.slice(0, m.index) + block + html.slice(m.index + m[0].length);
   }
 
   // 4. src / href / poster attributes
