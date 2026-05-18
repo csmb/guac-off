@@ -1394,8 +1394,16 @@ document.getElementById('dice-btn').addEventListener('click', (e) => {
     menu.style.display = 'none';
     menu.style.opacity = '0';
     menu.style.pointerEvents = 'none';
-    paused = true; // Stay paused until click anywhere
+    paused = false; // Start game loop for countdown!
     gameStarted = true;
+    countdownActive = true;
+    countdownStartTime = Date.now();
+    raceFinished = false; // Reset race!
+    decelStartTime = 0;
+    winnersCircleActive = false;
+    document.getElementById('see-details-btn').hidden = true;
+    document.getElementById('party-play-again').hidden = true;
+    score = 0; // Reset score!
     init();
     playMusic();
 });
