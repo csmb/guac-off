@@ -449,10 +449,10 @@ body {
   color: var(--info-cream);
   font-family: var(--font-body); /* VT323 */
   padding: var(--info-pad-t) var(--info-pad-x) var(--info-pad-b);
-  overflow: hidden; /* one-screen layout: never scroll, just clip if too tall */
+  overflow-y: auto; /* scroll the bottom panel when details exceed its height */
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly; /* spread blocks vertically with even gaps */
+  justify-content: flex-start; /* top-aligned so all content is reachable when scrolling */
   gap: 18px;
 }
 
