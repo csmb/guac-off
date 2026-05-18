@@ -1,0 +1,260 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="assets/a_7fcc08b1670f.css">
+    <link rel="shortcut icon" type="image/png" href="assets/a_800b684a2630.ico">
+    <script src="assets/a_475b86219157.js"></script>
+    <script src="assets/a_11708bc577be.js"></script>
+    <script src="assets/_missing"></script>
+    <script src='assets/_missing'></script>
+    <title>San. Fran. Guac. Off. 2023.</title>
+</head>
+
+<body>
+    <div class="winamp">
+        <div id="winamp-container"></div>
+        <script>
+        const Winamp = window.Webamp;
+        // All configuration options are optional.
+
+        const availableSkins = [
+            { url: "./public/Homer_Simpson_Goes_3D.wsz", name: "Home Simpson Goes 3d" },
+            { url: "./public/Matrix_by_sukhi.wsz", name: "The Matrix" },
+            { url: "./public/MORPHEUSamp1.wsz", name: "MorpheusAmp" },
+            { url: "./public/obi_wan_rules.wsz", name: "Obi Wan Rules" },
+            { url: "./public/San_Francisco_Giants.wsz", name: "San Fran Giants" },
+            { url: "./public/skinbs1.wsz", name: "Skins BS1" },
+            { url: "./public/XBOX_MasterAmp.wsz", name: "XBOX MasterAmp" },
+        ];
+
+        // Pick a random skin.
+        const randomIndex = Math.floor(Math.random() * availableSkins.length);
+        const randomSkin = availableSkins[randomIndex];
+
+        // Set the initial skin.
+        initialSkin = randomSkin;
+
+        const webamp = new Webamp({
+            // Optional.
+            initialTracks: [{
+                    metaData: {
+                        artist: "Full House",
+                        title: "Theme Song",
+                    },
+                    url: "./public/fullhouse.mp3",
+                }, {
+                    metaData: {
+                        artist: "Chip Sound FX",
+                        title: "Crunching Chips",
+                    },
+                    url: "./public/eating-chips-81092.mp3",
+                },
+                {
+                    metaData: {
+                        artist: "SF.midi",
+                        title: "Scott McKenzie",
+                    },
+                    url: "./public/r_u_going_2_sf.mp3",
+                },
+            ],
+            initialSkin: initialSkin,
+
+            // Optional. An array of objects representing skins.
+            // These will appear in the "Options" menu under "Skins".
+            // Note: These URLs must be served with the correct CORs headers.
+            availableSkins: availableSkins,
+
+        });
+
+
+
+        // const webamp = new Webamp({
+        //     // Optional.
+        //     initialTracks: [{
+        //             metaData: {
+        //                 artist: "Full House",
+        //                 title: "Theme Song",
+        //             },
+        //             url: "./public/fullhouse.mp3",
+        //         }, {
+        //             metaData: {
+        //                 artist: "Chip Sound FX",
+        //                 title: "Crunching Chips",
+        //             },
+        //             url: "./public/eating-chips-81092.mp3",
+        //         },
+        //         {
+        //             metaData: {
+        //                 artist: "SF.midi",
+        //                 title: "Scott McKenzie",
+        //             },
+        //             url: "./public/r_u_going_2_sf.mp3",
+        //         },
+        //     ],
+        //     initialSkin: {
+        //         url: "./public/MORPHEUSamp1.wsz"
+        //     },
+
+        //     // Optional. An array of objects representing skins.
+        //     // These will appear in the "Options" menu under "Skins".
+        //     // Note: These URLs must be served with the correct CORs headers.
+        //     availableSkins: [
+        //         { url: "./public/Homer_Simpson_Goes_3D.wsz", name: "Home Simpson Goes 3d" },
+        //         { url: "./public/Matrix_by_sukhi.wsz", name: "The Matrix" },
+        //         { url: "./public/MORPHEUSamp1.wsz", name: "MorpheusAmp" },
+        //         { url: "./public/obi_wan_rules.wsz", name: "Obi Wan Rules" },
+        //         { url: "./public/San_Francisco_Giants.wsz", name: "San Fran Giants" },
+        //         { url: "./public/skinbs1.wsz", name: "Skins BS1" },
+        //         { url: "./public/XBOX_MasterAmp.wsz", name: "XBOX MasterAmp" },
+        //     ],
+
+        // });
+
+        webamp.renderWhenReady(document.getElementById('winamp-container')).then(() => {
+            // webamp.store.dispatch({ type: "TOGGLE_WINDOW", windowId: "equalizer" });
+            // webamp.store.dispatch({ type: "TOGGLE_WINDOW", windowId: "playlist" });
+        });
+
+        const isMobileDevice = () => {
+            // Check if the device has a touch screen.
+            if (('ontouchstart' in window) || window.navigator.msMaxTouchPoints > 0) {
+                return true;
+            }
+
+            // Check the user agent.
+            const userAgent = window.navigator.userAgent;
+            const mobileUserAgents = [/Android/i, /iPhone/i, /iPad/i, /iPod/i];
+
+            for (const mobileUserAgent of mobileUserAgents) {
+                if (mobileUserAgent.test(userAgent)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        if (isMobileDevice()) {
+            // Run the code on mobile devices.
+            webamp.store.dispatch({ type: "TOGGLE_WINDOW", windowId: "equalizer" });
+            webamp.store.dispatch({ type: "TOGGLE_WINDOW", windowId: "playlist" });
+        }
+        </script>
+    </div>
+    <div class="hero">
+        <img class="discoball" src="assets/_missing">
+        <div class="title">
+            <div class="title-year solitaire">
+                The 12<span class="superscript">th</span> Annual San Francisco
+            </div>
+            <div class="title-name solitaire">
+                Guac Off
+            </div>
+            <div class="title-year solitaire">
+                Eat guacamole with your friends and neighbors
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="header-info">
+            <div class="header-time">
+                Saturday, Sept. 9
+                <br>1pm 'til the last chip is chewed</em></span>
+            </div>
+            <button onclick="showform()" class="btn">I WANT TO GO</button>
+        </div>
+        <div class="divider"></div>
+    </div>
+    <div class="info-section">
+        <div class="info">
+            <div class="info-intro">
+                <h1>The 12<span class="superscript">th</span> Annual San Francisco Guac Off is The Party that showcases the best guacamole The City has to offer.</h1>
+            </div>
+            <div>
+                <div class="rules">
+                    <img src="assets/_missing">
+                    <h2 class="rules">The Rules</h2>
+                    <ol>
+                        <li>Your guacamole must use <strong>at least 8 avocados</strong>.</li>
+                        <li>Bring guacamole. Or your friend. Or a beverage.</li>
+                        <li>No matter what you decide to bring, bring your friends!</li>
+                        <li>We'll provide the chips, <em>mystery prizes</em>, and the coveted <strong>Guacamole Glory Trophy</strong>.</li>
+                    </ol>
+                </div>
+                <div class="rules">
+                    <img src="assets/_missing">
+                    <h2 class="rules">The Judging</h2>
+                    <p>Everyone votes for their favorite guacamoles. All attendees must vote with their taste buds, heart, and eyes for their favorite guacamoles.</p>
+                </div>
+                <div class="rules">
+                    <img src="assets/_missing">
+                    <h2 class="rules">The Prizes</h2>
+                    <p>The top voted chef receives The Guacamole Glory Trophy and bragging rights until summer. The title of official
+                        <q>Guacamole of San Francisco,</q> a secret mystery prize! And maybe you even end up on KRON 4.</p>
+                </div>
+                <div class="rules">
+                    <img src="assets/_missing">
+                    <h2 class="rules">The Location</h2>
+                    <p>The Farmhouse Mansion – email MissionGuacParty@gmail.com for the specific address
+                        <br>The Mission, San Francisco
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h2 class="rules">The Sponsors</h2> 
+    <div class="sponsors-section">
+        <div class="sponsors">
+            <ul>
+                <li class="sponsor sponsor-bff">BFF.fm</li>
+                <li class="sponsor sponsor-laughing-monk">Laughing Monk</li>
+                <li class="sponsor sponsor-enterprise-brewing">Enterprise Brewing</li>
+                <li class="sponsor sponsor-emperor-norton">Emperor Norton</li>
+                <li class="sponsor sponsor-burrito-justice">Burrito Justice</li>
+                <li class="sponsor sponsor-tacolicious">Tacolicious</li>
+                <li class="sponsor sponsor-emporium">Emporium</li>
+                <li class="sponsor sponsor-sfneon">SF Neon</li>
+                <li class="sponsor sponsor-fleetwood">Fleetwood</li>
+                <li class="sponsor sponsor-scenic-routes">Scenic Routes</li>
+                <li class="sponsor sponsor-sf-in-bloom">SF In Bloom</li>
+                <li class="sponsor sponsor-casements">Casements</li>
+                <li class="sponsor sponsor-mbc">Mission Bowling Club</li>
+            </ul>
+        </div>
+    </div>
+    <div class="ytembed">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/4kKQ4eiJqzc?si=qVYEQyK-iDaBWqRn" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+    <div class="warning">
+        <img src="assets/a_5c327bc013d3.gif">
+        <marquee behavior="alternate">
+            <p>This page is Under Construction!!! BROWSE AT YOUR OWN RISK!!!</p>
+        </marquee>
+        <p>Please contact <a href="mailto:missionguacparty@gmail.com" style="text-decoration: underline;">The Webmaster</a> with questions or concerns.</p>
+        <marquee behavior="alternate" direction="right">
+            <p><a href="https://guacwalk.org/">The real reward was the guacamole friends we made along the way.</a></p>
+        </marquee>
+        <button class='clear' style="z-index:'9999'">Clear the Solitaire Mess</button>
+        <button class='everything' style="z-index:'9999'">DO NOT CLICK THIS BUTTON YOU'VE BEEN WARNED</button>
+    </div>
+    <div class="form" id="googleform">
+        <button onclick="hideform()" class="btn">CLOSE</button>
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScWhrB29wjwUB9FvG26jeGa9_DCrbLjm2hWTi6muebYQ_65cA/viewform?embedded=true" width="640" height="944" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+    </div>
+    <script>
+    $(document).on('ready', function() {
+        $('img, .solitaire, .sponsor').click(function(e) {
+            $(e.target).solitaireVictory();
+        });
+        $(document).on('click', 'button.clear', function() {
+            $('').solitaireVictory({ clear: true });
+        })
+        $(document).on('click', 'button.everything', function() {
+            $('h1, h2, h3, p, img').solitaireVictory();
+        })
+    })
+    </script>
+</body>
+
+</html>

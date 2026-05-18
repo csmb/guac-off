@@ -1,0 +1,13 @@
+https://guacamole.expert/public/windows_regular-webfont.woff
+https://guacamole.expert/public/dsf.jpg
+https://guacamole.expert/public/firefly.gif
+https://guacamole.expert/public/fortpoint.png
+https://guacamole.expert/public/tripps.png
+https://guacamole.expert/public/workshop.jpg
+https://guacamole.expert/public/script.js
+https://guacamole.expert/public/solitaireVictory.js
+https://guacamole.expert/public/spinny.gif
+https://guacamole.expert/public/sunblk.gif
+https://guacamole.expert/public/kissingchef.gif
+https://guacamole.expert/public/trophy1.gif
+https://guacamole.expert/public/chef.gif
