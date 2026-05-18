@@ -16,12 +16,23 @@ if (!ts || !originalUrl || !outDir) {
 const UA = { "User-Agent": "guac-off-archiver/1.0" };
 
 async function nearest(timestamp, url) {
-  const api = `https://archive.org/wayback/available?url=${encodeURIComponent(url)}&timestamp=${timestamp}`;
-  const r = await fetch(api, { headers: UA });
-  const j = await r.json();
-  const snap = j?.archived_snapshots?.closest;
-  if (!snap?.timestamp) throw new Error(`no capture for ${url} near ${timestamp}`);
-  return snap.timestamp;
+  // The wayback/available API is rate-limited (429) in some environments;
+  // resolve the closest capture via the CDX server instead.
+  const api = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&closest=${timestamp}&limit=8&filter=statuscode:200&fl=timestamp&output=json`;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    let r;
+    try { r = await fetch(api, { headers: UA }); }
+    catch (e) { await new Promise(s => setTimeout(s, 2000 * (attempt + 1))); continue; }
+    if (r.status === 200) {
+      const rows = await r.json();
+      const data = Array.isArray(rows) ? rows.slice(1) : []; // row 0 is the header
+      if (data.length && data[0][0]) return data[0][0];
+      throw new Error(`no capture for ${url} near ${timestamp}`);
+    }
+    if (r.status === 429 || r.status === 503) { await new Promise(s => setTimeout(s, 2500 * (attempt + 1))); continue; }
+    throw new Error(`CDX HTTP ${r.status} for ${url}`);
+  }
+  throw new Error(`CDX unavailable for ${url} after retries`);
 }
 
 const rawUrl = (stamp, u) => `https://web.archive.org/web/${stamp}id_/${u}`;
