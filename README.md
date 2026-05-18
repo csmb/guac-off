@@ -17,3 +17,7 @@ An archive of code from many years of the **Guac Off** — an annual guacamole c
 | `guac-game` | 2025 | React + TypeScript + Vite | Browser-based guac game |
 | `guac2025` | 2025 | Static HTML | Event landing page for Guac Off 2025 |
 | `guac_game_v2` | 2026 | Python + Pygame | Point-and-click adventure game with a metal theme |
+
+## Guac Off Through the Years
+
+`Guac Off 2026/years/` is a browsable "Guac Off Through the Years" archive — a gallery of self-contained, offline snapshots covering 14 years (2012–2026, no 2014), built from Wayback Machine captures plus local sources. It's reachable from the 2026 home page and at `/years/`.
