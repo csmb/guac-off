@@ -92,18 +92,15 @@ body {
     letter-spacing: 1px;
   }
 
-  /* Shrink the always-on HUD buttons so they don't dominate a phone screen */
-  .music-toggle,
-  .restart-btn {
+  /* Shrink the always-on music toggle so it doesn't dominate a phone screen */
+  .music-toggle {
     padding: 5px 10px;
     font-size: 8px;
     border-width: 1px;
     box-shadow: 2px 2px 0px var(--text-color);
-    top: 10px;
+    bottom: 10px;
+    right: 10px;
   }
-
-  .music-toggle { right: 10px; }
-  .restart-btn  { left: 10px; box-shadow: -2px 2px 0px var(--text-color); }
 }
 
 .ui-layer {
@@ -419,7 +416,7 @@ body {
 
 .music-toggle {
   position: absolute;
-  top: 20px;
+  bottom: 20px;
   right: 20px;
   padding: 10px 20px;
   background: rgba(0, 0, 0, 0.7);
@@ -437,25 +434,6 @@ body {
   color: #000;
 }
 
-.restart-btn {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  padding: 10px 20px;
-  background: rgba(0, 0, 0, 0.7);
-  border: 2px solid var(--accent-color);
-  color: var(--accent-color);
-  font-family: var(--font-title);
-  font-size: 10px;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: -3px 3px 0px var(--text-color);
-}
-
-.restart-btn:hover {
-  background: var(--accent-color);
-  color: #000;
-}
 
 /* ============ Info section (below game hero) ============ */
 

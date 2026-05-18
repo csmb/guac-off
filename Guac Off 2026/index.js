@@ -1238,10 +1238,6 @@ function gameLoop() {
         ctx.textAlign = 'left';
     }
     
-    const debugDiv = document.getElementById('debug-overlay');
-    if (debugDiv) {
-        debugDiv.textContent = `Paused: ${paused} | Pos: ${position} | Segments: ${segments.length} | PlayerX: ${playerX.toFixed(2)}${raceFinished ? ' | FINISHED!' : ''}`;
-    }
 }
 
 // Menu Listeners
@@ -1341,8 +1337,7 @@ document.addEventListener('click', (e) => {
     // Ignore clicks outside the game hero (e.g., in the info section below)
     if (!e.target.closest('#game-hero')) return;
 
-    if (gameStarted &&
-        e.target.id !== 'music-toggle' && e.target.id !== 'restart-btn') {
+    if (gameStarted && e.target.id !== 'music-toggle') {
         paused = !paused;
     }
 });
@@ -1382,7 +1377,7 @@ window.addEventListener('touchstart', (e) => {
         e.preventDefault(); // Prevent selection on canvas/body!
     }
     if (paused && gameStarted && inGameHero &&
-        e.target.id !== 'music-toggle' && e.target.id !== 'restart-btn') {
+        e.target.id !== 'music-toggle') {
         paused = false;
     }
 }, { passive: false });
@@ -1417,19 +1412,6 @@ document.getElementById('music-toggle').addEventListener('click', () => {
     }
 });
 
-document.getElementById('restart-btn').addEventListener('click', () => {
-    position = 0;
-    paused = true;
-    const menu = document.getElementById('menu-overlay');
-    menu.style.display = 'block';
-    menu.style.opacity = '1';
-    menu.style.pointerEvents = 'auto';
-    setStep(1); // Reset step!
-    if (currentMusic) {
-        currentMusic.pause();
-        currentMusic.currentTime = 0;
-    }
-});
 
 
 
