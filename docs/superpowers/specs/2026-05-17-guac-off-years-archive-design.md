@@ -149,3 +149,31 @@ the years", linking to `years/`. Must not disrupt the game hero or info flow.
 - The 2026 home page link works and does not disrupt the game/info sections.
 - Originals at repo root are byte-for-byte unchanged (git status clean outside
   `Guac Off 2026/years/` and the one `index.html` link addition).
+
+---
+
+## Addendum — 2026-05-18: source-true rebuild + 2014 restored
+
+After the initial Wayback-based build, the original per-year source repos were
+located locally (`~/code/missionguacparty2012|2013|2014|2016` — the event site
+was reused/renamed across years, each with full git history). The archive was
+rebuilt from these for fidelity:
+
+- **2014 restored.** Previously omitted (no source existed: Wayback was a parked
+  page). `missionguacparty2014` history holds the real 2014 site. Gallery is now
+  **15 years (2012–2026)**, the "no 2014" decision is reversed.
+- **2012–2021 rebuilt from real source**, each extracted at the finalized
+  pre-event commit and flattened to a self-contained static page:
+  - 2012 ← `missionguacparty2012@121dd84` (Rails: layout+partials composed,
+    helpers/ERB resolved, SCSS hand-converted)
+  - 2013 ← `missionguacparty2013@b56601d` (Sinatra + `layout.erb`)
+  - 2014 ← `missionguacparty2014@9b65e2a`; 2015 ← `…@eec8575`
+    (Sinatra + `application.erb`; 2015 `<%= @avocados %>` → 6)
+  - 2016 ← `missionguacparty2016@e3133b8`; 2017 ← `@f55d76f`;
+    2018 ← `@0a46e84`; 2019 ← `@95aeb5f` (Sinatra, no layout — pure static)
+  - 2020 ← `missionguacparty2016@f1f3fc2` using `views/guacwalk.erb` (the real
+    COVID-year GuacWalk page; the imgur-hosted map was localized)
+  - 2021 ← `missionguacparty2016@3950f94` (static `public/guac.html`)
+- 2022/2023/2024 remain Wayback (no source repo exists); 2025 local, 2026 live.
+- Caveat notes for the rebuilt years removed; descriptions now say "recovered
+  from source". Source repos are read-only — never modified.
