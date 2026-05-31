@@ -153,7 +153,9 @@ let speedBonus = 0;
 let screenShake = { frames: 0, magnitude: 0 };
 let lastCountdown = 4;
 
-const FOG_INTENSITY = { mttam: 1.0, mission: 0.0, ggp: 0.25, market: 0.0 };
+// Fog was tinting the road + rider gray; disabled across the board.
+// To bring it back per-road, raise the value (mttam used 1.0, ggp 0.25).
+const FOG_INTENSITY = { mttam: 0.0, mission: 0.0, ggp: 0.0, market: 0.0 };
 const fogBanks = [
     { x: 0,    y: 0.55, w: 600, speed: 0.4, alpha: 0.55 },
     { x: -300, y: 0.62, w: 700, speed: 0.7, alpha: 0.45 },
