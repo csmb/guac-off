@@ -262,45 +262,47 @@ body {
   background: rgba(13, 2, 33, 0.9);
   border: 4px solid var(--text-color);
   box-shadow: 0 0 20px var(--text-color), 0 0 40px var(--accent-color);
-  padding: 30px;
+  padding: 18px 22px;
   text-align: center;
   z-index: 1000;
-  max-width: 700px; /* Wider for grid */
+  max-width: 640px; /* Wider for grid */
   width: 95%;
+  max-height: calc(100% - 24px); /* never overflow the 50vh game pane */
+  overflow-y: auto;
   font-family: var(--font-body);
 }
 
 .menu-overlay h1 {
   font-family: var(--font-title);
-  font-size: 24px;
+  font-size: 18px;
   color: var(--secondary-color);
   text-shadow: 3px 3px 0px var(--text-color);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .menu-step h2 {
   font-family: var(--font-title);
-  font-size: 14px;
+  font-size: 12px;
   color: var(--accent-color);
-  margin-bottom: 15px;
+  margin-bottom: 8px;
 }
 
 .selection-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  margin-bottom: 25px;
+  grid-template-columns: repeat(4, minmax(0, 100px));
+  gap: 10px;
+  margin-bottom: 12px;
   justify-content: center;
 }
 
 #road-grid {
-  grid-template-columns: repeat(5, 1fr); /* 5 options for roads */
+  grid-template-columns: repeat(5, minmax(0, 90px)); /* 5 options for roads */
 }
 
 .grid-item {
   background: #000;
   border: 2px solid #555;
-  padding: 10px;
+  padding: 6px;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -319,9 +321,10 @@ body {
 
 .grid-item p {
   font-family: var(--font-body);
-  font-size: 18px;
+  font-size: 14px;
   color: #fff;
-  margin-top: 5px;
+  margin-top: 2px;
+  line-height: 1.1;
 }
 
 .grid-item:hover {
@@ -342,14 +345,14 @@ body {
 .menu-actions {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin-top: 20px;
+  gap: 14px;
+  margin-top: 10px;
 }
 
 .menu-overlay button {
-  padding: 15px 30px;
+  padding: 10px 22px;
   font-family: var(--font-title);
-  font-size: 16px;
+  font-size: 13px;
   background: var(--text-color);
   color: #fff;
   border: none;
