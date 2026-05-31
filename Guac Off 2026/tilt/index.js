@@ -2,6 +2,10 @@
 
 (function () {
   const { Engine, World, Bodies, Body, Composite } = Matter;
+
+  // Register attractors plugin (must happen before Engine.create).
+  Matter.use(MatterAttractors);
+
   const H = window.TiltHelpers;
 
   // --- DOM ---
@@ -43,6 +47,32 @@
     Composite.add(engine.world, body);
     return { el, body, locked: false };
   });
+
+  // --- Bowl ---
+  const BOWL_CX = W * 0.5;
+  const BOWL_CY = Hh * 0.55;
+  const BOWL_R = W * 0.21;         // matches .bowl width: 42% / 2
+  const BOWL_PULL_RADIUS = W * 0.35;
+  const PULL_GAIN = 0.00018;
+
+  const bowl = Bodies.circle(BOWL_CX, BOWL_CY, BOWL_R, {
+    isStatic: true,
+    isSensor: true,                 // no collision response
+    render: { visible: false },
+    plugin: {
+      attractors: [
+        function (bowlBody, otherBody) {
+          const dx = bowlBody.position.x - otherBody.position.x;
+          const dy = bowlBody.position.y - otherBody.position.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > BOWL_PULL_RADIUS) return null;
+          const strength = (1 - dist / BOWL_PULL_RADIUS) * PULL_GAIN;
+          return { x: dx * strength, y: dy * strength };
+        }
+      ]
+    }
+  });
+  Composite.add(engine.world, bowl);
 
   // --- Tilt input ---
   let smoothBeta = 0;
