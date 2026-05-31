@@ -6,6 +6,45 @@
   // Register attractors plugin (must happen before Engine.create).
   Matter.use(MatterAttractors);
 
+  // --- Audio ---
+  let audioCtx = null;
+  function ensureAudio() {
+    if (audioCtx) return audioCtx;
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { /* audio not available — silent fallback */ }
+    return audioCtx;
+  }
+
+  function playThunk() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    // Low-frequency body
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(80, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+    const oscGain = ctx.createGain();
+    oscGain.gain.setValueAtTime(0.0, now);
+    oscGain.gain.linearRampToValueAtTime(0.5, now + 0.005);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.connect(oscGain).connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.2);
+    // Noise burst
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.4;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 600;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.5, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    noise.connect(lp).connect(noiseGain).connect(ctx.destination);
+    noise.start(now);
+  }
+
   const H = window.TiltHelpers;
 
   // --- DOM ---
@@ -73,6 +112,7 @@
     }
   });
   Composite.add(engine.world, bowl);
+  const slots = H.slotPositions({ x: BOWL_CX, y: BOWL_CY }, BOWL_R, ingredients.length);
 
   // --- Tilt input ---
   let smoothBeta = 0;
@@ -94,6 +134,25 @@
     engine.gravity.x = g.x;
     engine.gravity.y = g.y;
     Engine.update(engine, 1000 / 60);
+
+    // Lock-and-snap pass
+    for (let i = 0; i < ingredients.length; i++) {
+      const ing = ingredients[i];
+      if (ing.locked) continue;
+      const dx = BOWL_CX - ing.body.position.x;
+      const dy = BOWL_CY - ing.body.position.y;
+      const dist = Math.hypot(dx, dy);
+      const speed = Math.hypot(ing.body.velocity.x, ing.body.velocity.y);
+      if (H.shouldLock(dist, speed)) {
+        ing.locked = true;
+        Body.setStatic(ing.body, true);
+        Body.setVelocity(ing.body, { x: 0, y: 0 });
+        Body.setPosition(ing.body, slots[i]);
+        ing.el.classList.add('locked');
+        playThunk();
+      }
+    }
+
     for (const ing of ingredients) {
       const { x, y } = ing.body.position;
       const a = ing.body.angle;
