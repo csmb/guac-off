@@ -144,8 +144,6 @@
     smoothBeta = smoothBeta * 0.85 + beta * 0.15;
     smoothGamma = smoothGamma * 0.85 + gamma * 0.15;
   }
-  window.addEventListener('deviceorientation', onOrientation);
-
   const wonEl = document.getElementById('won');
   let gameWon = false;
 
@@ -219,5 +217,56 @@
     }
     requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
+
+  // --- Cover screen + permission flow ---
+  const coverEl = document.getElementById('cover');
+  const coverSub = document.getElementById('cover-sub');
+  const playBtn = document.getElementById('play-btn');
+
+  async function requestMotionPermission() {
+    // iOS 13+: must call from a user gesture
+    const need = typeof DeviceMotionEvent !== 'undefined'
+      && typeof DeviceMotionEvent.requestPermission === 'function';
+    if (!need) return 'granted'; // non-iOS browsers fire events freely
+    try {
+      const m = await DeviceMotionEvent.requestPermission();
+      const o = (typeof DeviceOrientationEvent !== 'undefined'
+        && typeof DeviceOrientationEvent.requestPermission === 'function')
+        ? await DeviceOrientationEvent.requestPermission()
+        : 'granted';
+      return (m === 'granted' && o === 'granted') ? 'granted' : 'denied';
+    } catch (e) { return 'denied'; }
+  }
+
+  function startGame() {
+    coverEl.hidden = true;
+    coverEl.setAttribute('aria-hidden', 'true');
+    window.addEventListener('deviceorientation', onOrientation);
+    requestAnimationFrame(tick);
+
+    // Desktop fallback: if no orientation event arrives in 1s, abort with a message.
+    setTimeout(function () {
+      if (!tiltActive) {
+        coverEl.hidden = false;
+        coverEl.setAttribute('aria-hidden', 'false');
+        coverSub.textContent = 'Best on a phone — open this URL on your phone 📱';
+        playBtn.hidden = true;
+      }
+    }, 1000);
+  }
+
+  playBtn.addEventListener('click', async function () {
+    // Init audio (browser policy requires a gesture)
+    ensureAudio();
+    if (audioCtx && audioCtx.state === 'suspended') {
+      try { await audioCtx.resume(); } catch (e) {}
+    }
+    const status = await requestMotionPermission();
+    if (status === 'granted') {
+      startGame();
+    } else {
+      coverSub.textContent = 'Motion access is needed — refresh and tap Allow to play.';
+      playBtn.hidden = true;
+    }
+  });
 })();
