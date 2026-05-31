@@ -404,14 +404,19 @@ function createRoad() {
             }
         }
     }
-    // Fixed-position landmarks (parallax horizon)
-    const LANDMARK_POSITIONS = [12000, 28000, 42000];
-    LANDMARK_POSITIONS.forEach((z, i) => {
-        const sprite = pickLandmarkForScene(currentRoad);
-        if (sprite) {
-            roadside.push({ z, x: (i % 2 === 0 ? -0.3 : 0.3), side: 'horizon', sprite });
-        }
-    });
+    // Fixed-position landmarks (parallax horizon).
+    // Flip to true to bring back the Golden Gate / Sutro / etc. emoji
+    // landmarks that grow in the sky as you approach.
+    const SHOW_HORIZON_LANDMARKS = false;
+    if (SHOW_HORIZON_LANDMARKS) {
+        const LANDMARK_POSITIONS = [12000, 28000, 42000];
+        LANDMARK_POSITIONS.forEach((z, i) => {
+            const sprite = pickLandmarkForScene(currentRoad);
+            if (sprite) {
+                roadside.push({ z, x: (i % 2 === 0 ? -0.3 : 0.3), side: 'horizon', sprite });
+            }
+        });
+    }
 }
 
 // Linear interpolate between two #rrggbb colors. t in [0,1].
