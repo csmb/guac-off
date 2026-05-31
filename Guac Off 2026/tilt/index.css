@@ -1,0 +1,3 @@
+/* Tilt-to-Guac styles — populated in Task 2. */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; background: #1a1a1a; }

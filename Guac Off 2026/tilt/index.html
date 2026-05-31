@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥑</text></svg>">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tilt to Guac · SF GUAC OFF 2026</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <main id="board" class="board">
+    <div id="bowl" class="bowl"></div>
+    <div class="ingredient" data-id="avocado">🥑</div>
+    <div class="ingredient" data-id="onion">🧅</div>
+    <div class="ingredient" data-id="pepper">🌶️</div>
+
+    <div id="cover" class="overlay cover" aria-hidden="false">
+      <button id="play-btn" class="play-btn" type="button">🥑 Tap to play</button>
+      <p id="cover-sub" class="cover-sub">Tilt your phone to roll the ingredients into the bowl</p>
+    </div>
+
+    <div id="won" class="overlay won" aria-hidden="true" hidden>
+      <p class="won-headline">Guac is served 🥑</p>
+      <p class="won-sub">tap to play again</p>
+    </div>
+  </main>
+
+  <script src="helpers.js"></script>
+  <script src="vendor/matter.min.js"></script>
+  <script src="vendor/matter-attractors.min.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
