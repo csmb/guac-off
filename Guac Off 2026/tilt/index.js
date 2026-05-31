@@ -45,6 +45,24 @@
     noise.start(now);
   }
 
+  function playChime() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    [523.25, 659.25, 783.99].forEach(function (freq, i) {  // C5, E5, G5
+      const t0 = now + i * 0.12;
+      const osc = ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t0);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.25, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.5);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t0); osc.stop(t0 + 0.55);
+    });
+  }
+
   const H = window.TiltHelpers;
 
   // --- DOM ---
@@ -128,6 +146,40 @@
   }
   window.addEventListener('deviceorientation', onOrientation);
 
+  const wonEl = document.getElementById('won');
+  let gameWon = false;
+
+  function enterWon() {
+    if (gameWon) return;
+    gameWon = true;
+    board.classList.add('dimmed');
+    board.classList.add('won');
+    wonEl.hidden = false;
+    wonEl.setAttribute('aria-hidden', 'false');
+    playChime();
+  }
+
+  function resetGame() {
+    gameWon = false;
+    board.classList.remove('dimmed');
+    board.classList.remove('won');
+    wonEl.hidden = true;
+    wonEl.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < ingredients.length; i++) {
+      const ing = ingredients[i];
+      Body.setStatic(ing.body, false);
+      Body.setVelocity(ing.body, { x: 0, y: 0 });
+      Body.setAngularVelocity(ing.body, 0);
+      const startX = W * (0.15 + Math.random() * 0.7);
+      const startY = Hh * (0.1 + Math.random() * 0.15);
+      Body.setPosition(ing.body, { x: startX, y: startY });
+      ing.locked = false;
+      ing.el.classList.remove('locked');
+    }
+  }
+
+  wonEl.addEventListener('click', resetGame);
+
   // --- Render loop ---
   function tick() {
     const g = H.tiltToGravity(smoothBeta, smoothGamma);
@@ -151,6 +203,10 @@
         ing.el.classList.add('locked');
         playThunk();
       }
+    }
+
+    if (!gameWon && H.allLocked(ingredients)) {
+      enterWon();
     }
 
     for (const ing of ingredients) {
