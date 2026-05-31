@@ -610,54 +610,12 @@ function drawFog() {
     }
 }
 
-// Gold podium ring drawn on the ground beneath the rider once the finish
-// line is crossed. Lives on its own (called from render() right before the
-// bike sprite) so the bike stands inside the circle.
-function drawWinnersCircle(cx, cy, baseR, alpha) {
-    if (alpha <= 0) return;
-    const pulse = 1 + Math.sin(Date.now() / 250) * 0.04;
-    const R = baseR * pulse;
-    const ry = R * 0.28; // perspective squish — flat oval on the ground
-
-    ctx.save();
-    ctx.globalAlpha = alpha;
-
-    // Outer halo
-    const haloR = R * 1.8;
-    const halo = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, haloR);
-    halo.addColorStop(0,   'rgba(255,215,0,0.55)');
-    halo.addColorStop(0.5, 'rgba(255,215,0,0.18)');
-    halo.addColorStop(1,   'rgba(255,215,0,0)');
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, haloR, haloR * 0.32, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Soft podium fill
-    ctx.fillStyle = 'rgba(255,215,0,0.12)';
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, R, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Gold outer ring
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, R, ry, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Inner darker accent
-    ctx.strokeStyle = 'rgba(180,140,0,0.85)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, Math.max(0, R - 5), Math.max(0, ry - 1.5), 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.restore();
-}
-
 function drawParty() {
     if (!winnersCircleActive) return;
+
+    // Dim the road behind the party
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Confetti
     for (const c of confetti) {
@@ -676,22 +634,34 @@ function drawParty() {
         ctx.restore();
     }
 
-    // Banner — bobbing "WINNER'S CIRCLE" headline up top so the rider
-    // standing in the gold ring below is the visual focus.
+    // Banner — "🎉 WELCOME TO THE GUAC OFF 🎉" with subtle bob
     const bob = Math.sin(Date.now() / 400) * 4;
     ctx.textAlign = 'center';
-    const bannerSize = Math.round(22 * (canvas.height / 600));
+    const bannerSize = Math.round(28 * (canvas.height / 600));
     ctx.font = `${bannerSize}px "Press Start 2P", monospace`;
     ctx.fillStyle = '#000000';
-    ctx.fillText("🏆 WINNER'S CIRCLE 🏆", canvas.width / 2 + 3, canvas.height * 0.12 + bob + 3);
-    ctx.fillStyle = '#ffd700';
-    ctx.fillText("🏆 WINNER'S CIRCLE 🏆", canvas.width / 2, canvas.height * 0.12 + bob);
+    ctx.fillText('🎉 WELCOME TO THE GUAC OFF 🎉', canvas.width / 2 + 3, canvas.height * 0.18 + bob + 3);
+    ctx.fillStyle = '#ebd2b4';
+    ctx.fillText('🎉 WELCOME TO THE GUAC OFF 🎉', canvas.width / 2, canvas.height * 0.18 + bob);
 
-    // Results card — moved up to the top third so it doesn't cover the rider.
+    // Party crowd row near the bottom — each emoji bobs independently
+    const crowd = ['🥳', '💃', '🕺', '🍻', '🥑', '🎺', '🌮', '🥑'];
+    const crowdSize = Math.round(60 * (canvas.height / 600));
+    ctx.font = `${crowdSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.textBaseline = 'bottom';
+    const gap = canvas.width / (crowd.length + 1);
+    for (let i = 0; i < crowd.length; i++) {
+        const cb = Math.sin(Date.now() / 300 + i) * 6;
+        ctx.fillText(crowd[i], (i + 1) * gap, canvas.height * 0.85 + cb);
+    }
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+
+    // Results card text (the PLAY AGAIN button is a DOM element shown separately)
     const cardCx = canvas.width / 2;
-    const cardCy = canvas.height * 0.30;
-    const cardW = Math.min(360, canvas.width * 0.55);
-    const cardH = Math.round(88 * (canvas.height / 600));
+    const cardCy = canvas.height / 2;
+    const cardW = Math.min(420, canvas.width * 0.8);
+    const cardH = Math.round(120 * (canvas.height / 600));
     ctx.fillStyle = 'rgba(13, 2, 33, 0.92)';
     ctx.fillRect(cardCx - cardW / 2, cardCy - cardH / 2, cardW, cardH);
     ctx.strokeStyle = '#ff007f';
@@ -699,35 +669,17 @@ function drawParty() {
     ctx.strokeRect(cardCx - cardW / 2, cardCy - cardH / 2, cardW, cardH);
 
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    ctx.font = `${Math.round(12 * (canvas.height / 600))}px "Press Start 2P", monospace`;
+    ctx.font = `${Math.round(14 * (canvas.height / 600))}px "Press Start 2P", monospace`;
     ctx.fillStyle = '#00ffff';
-    ctx.fillText('FINAL SCORE', cardCx, cardCy - cardH / 2 + 18);
+    ctx.fillText('FINAL SCORE', cardCx, cardCy - cardH / 2 + 22);
     ctx.fillStyle = '#ff007f';
-    ctx.font = `${Math.round(18 * (canvas.height / 600))}px "Press Start 2P", monospace`;
-    ctx.fillText(String(score).padStart(6, '0'), cardCx, cardCy + 2);
+    ctx.font = `${Math.round(22 * (canvas.height / 600))}px "Press Start 2P", monospace`;
+    ctx.fillText(String(score).padStart(6, '0'), cardCx, cardCy - 4);
     const fmin = Math.floor(elapsedTime / 60);
     const fsec = (elapsedTime - fmin * 60).toFixed(1).padStart(4, '0');
-    ctx.font = `${Math.round(10 * (canvas.height / 600))}px "Press Start 2P", monospace`;
+    ctx.font = `${Math.round(11 * (canvas.height / 600))}px "Press Start 2P", monospace`;
     ctx.fillStyle = '#39ff14';
-    ctx.fillText(`TIME ${String(fmin).padStart(2, '0')}:${fsec}`, cardCx, cardCy + cardH / 2 - 12);
-
-    // Crowd along the bottom corners — left + right clusters so the centre
-    // of the screen (rider + winner's circle) stays clear.
-    const crowdL = ['🥳', '💃', '🍻'];
-    const crowdR = ['🕺', '🥑', '🎺'];
-    const crowdSize = Math.round(38 * (canvas.height / 600));
-    ctx.font = `${crowdSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-    ctx.textBaseline = 'bottom';
-    for (let i = 0; i < crowdL.length; i++) {
-        const cb = Math.sin(Date.now() / 300 + i) * 6;
-        ctx.fillText(crowdL[i], 28 + i * crowdSize * 1.05, canvas.height - 14 + cb);
-    }
-    for (let i = 0; i < crowdR.length; i++) {
-        const cb = Math.sin(Date.now() / 300 + i + 1.5) * 6;
-        ctx.fillText(crowdR[i], canvas.width - 28 - i * crowdSize * 1.05, canvas.height - 14 + cb);
-    }
-    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(`TIME ${String(fmin).padStart(2, '0')}:${fsec}`, cardCx, cardCy + cardH / 2 - 14);
     ctx.textAlign = 'left';
 }
 
@@ -1036,16 +988,7 @@ function render() {
     
     // Calculate lean angle based on turning steering delta
     const leanAngle = (targetPlayerX - playerX) * 0.3;
-
-    // Winner's circle — fades in over the 2s deceleration after the finish
-    // line, then stays at full opacity once the rider is stopped.
-    if (raceFinished) {
-        const t = winnersCircleActive
-            ? 1
-            : Math.min(1, (Date.now() - decelStartTime) / 2000);
-        drawWinnersCircle(bikeX + bikeW / 2, bikeY + bikeH, bikeW * 0.55, t);
-    }
-
+    
     ctx.save();
     ctx.translate(bikeX + bikeW / 2, bikeY + bikeH); // Pivot from bottom center (wheels)
     ctx.rotate(leanAngle);
