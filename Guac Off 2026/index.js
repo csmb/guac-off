@@ -377,22 +377,26 @@ function createRoad() {
                 const type = INGREDIENTS[Math.floor(Math.random() * INGREDIENTS.length)];
                 pickups.push({ z: z, x: (Math.random() - 0.5) * 1.5, type: type });
             }
-            // Spawn roadside props (left and right)
-            const ROADSIDE_RATE = 0.06;
-            const PERSON_RATE = 0.02;
-            for (const side of ['left', 'right']) {
-                if (Math.random() < ROADSIDE_RATE) {
-                    const sprite = pickSpriteForScene(currentRoad, 'prop');
-                    if (sprite) {
-                        const x = side === 'left' ? -1.05 - Math.random() * 0.2 : 1.05 + Math.random() * 0.2;
-                        roadside.push({ z, x, side, sprite });
+            // Spawn roadside props (left and right).
+            // Flip to true to bring back the emoji sprites flanking the road.
+            const SHOW_ROADSIDE_SPRITES = false;
+            if (SHOW_ROADSIDE_SPRITES) {
+                const ROADSIDE_RATE = 0.06;
+                const PERSON_RATE = 0.02;
+                for (const side of ['left', 'right']) {
+                    if (Math.random() < ROADSIDE_RATE) {
+                        const sprite = pickSpriteForScene(currentRoad, 'prop');
+                        if (sprite) {
+                            const x = side === 'left' ? -1.05 - Math.random() * 0.2 : 1.05 + Math.random() * 0.2;
+                            roadside.push({ z, x, side, sprite });
+                        }
                     }
-                }
-                if (Math.random() < PERSON_RATE) {
-                    const sprite = pickSpriteForScene(currentRoad, Math.random() < 0.5 ? 'person' : 'creature');
-                    if (sprite) {
-                        const x = side === 'left' ? -1.0 - Math.random() * 0.2 : 1.0 + Math.random() * 0.2;
-                        roadside.push({ z, x, side, sprite });
+                    if (Math.random() < PERSON_RATE) {
+                        const sprite = pickSpriteForScene(currentRoad, Math.random() < 0.5 ? 'person' : 'creature');
+                        if (sprite) {
+                            const x = side === 'left' ? -1.0 - Math.random() * 0.2 : 1.0 + Math.random() * 0.2;
+                            roadside.push({ z, x, side, sprite });
+                        }
                     }
                 }
             }
