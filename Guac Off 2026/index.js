@@ -733,42 +733,46 @@ function render() {
     const startIndex = Math.floor(position / segmentLength);
     const maxSegments = Math.min(segments.length, startIndex + drawDistance);
     
-    // Pass 1: Draw grass from back to front
-    for (let n = maxSegments - 1; n >= startIndex; n--) {
-        const segment = segments[n];
-        if (segment.isBridge) continue;
-        
-        let p1 = segment.p1;
-        let p2 = segment.p2;
-        
-        if (n === startIndex) {
-            p1 = Object.assign({}, segment.p1);
-            p1.z = position + 1;
-            const t = (p1.z - segment.p1.z) / (segment.p2.z - segment.p1.z);
-            p1.y = segment.p1.y + (segment.p2.y - segment.p1.y) * t;
-        }
-        
-        project(p1, width, height);
-        project(p2, width, height);
-        
-        if (p2.z > position) {
-            ctx.fillStyle = lerpColor(style.grassColor1, style.grassColor2, n / (segments.length - 1));
-            
-            // Left grass
-            ctx.beginPath();
-            ctx.moveTo(0, p1.screenY);
-            ctx.lineTo(p1.screenX - p1.screenWidth, p1.screenY);
-            ctx.lineTo(p2.screenX - p2.screenWidth, p2.screenY - 1);
-            ctx.lineTo(0, p2.screenY - 1);
-            ctx.fill();
-            
-            // Right grass
-            ctx.beginPath();
-            ctx.moveTo(p1.screenX + p1.screenWidth, p1.screenY);
-            ctx.lineTo(width, p1.screenY);
-            ctx.lineTo(width, p2.screenY - 1);
-            ctx.lineTo(p2.screenX + p2.screenWidth, p2.screenY - 1);
-            ctx.fill();
+    // Pass 1: Grass — intentionally skipped so the background image shows
+    // through on the sides of the road. Per-road grass colors are kept on
+    // roadStyles for reference; set style.showGrass = true to re-enable.
+    if (style.showGrass) {
+        for (let n = maxSegments - 1; n >= startIndex; n--) {
+            const segment = segments[n];
+            if (segment.isBridge) continue;
+
+            let p1 = segment.p1;
+            let p2 = segment.p2;
+
+            if (n === startIndex) {
+                p1 = Object.assign({}, segment.p1);
+                p1.z = position + 1;
+                const t = (p1.z - segment.p1.z) / (segment.p2.z - segment.p1.z);
+                p1.y = segment.p1.y + (segment.p2.y - segment.p1.y) * t;
+            }
+
+            project(p1, width, height);
+            project(p2, width, height);
+
+            if (p2.z > position) {
+                ctx.fillStyle = lerpColor(style.grassColor1, style.grassColor2, n / (segments.length - 1));
+
+                // Left grass
+                ctx.beginPath();
+                ctx.moveTo(0, p1.screenY);
+                ctx.lineTo(p1.screenX - p1.screenWidth, p1.screenY);
+                ctx.lineTo(p2.screenX - p2.screenWidth, p2.screenY - 1);
+                ctx.lineTo(0, p2.screenY - 1);
+                ctx.fill();
+
+                // Right grass
+                ctx.beginPath();
+                ctx.moveTo(p1.screenX + p1.screenWidth, p1.screenY);
+                ctx.lineTo(width, p1.screenY);
+                ctx.lineTo(width, p2.screenY - 1);
+                ctx.lineTo(p2.screenX + p2.screenWidth, p2.screenY - 1);
+                ctx.fill();
+            }
         }
     }
 
