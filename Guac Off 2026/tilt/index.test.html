@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tilt helpers — tests</title>
+  <style>
+    body { font-family: ui-monospace, monospace; padding: 1rem; background: #111; color: #eee; }
+    .pass { color: #39ff14; }
+    .fail { color: #ff007f; }
+    h1 { font-size: 1rem; }
+    pre { margin: 0.2rem 0; }
+  </style>
+</head>
+<body>
+  <h1>Tilt helpers — tests</h1>
+  <div id="out"></div>
+  <script src="helpers.js"></script>
+  <script>
+    const out = document.getElementById('out');
+    let passed = 0, failed = 0;
+
+    function assertEq(name, actual, expected, tolerance = 0) {
+      const ok = (typeof actual === 'object')
+        ? JSON.stringify(actual) === JSON.stringify(expected)
+        : (tolerance ? Math.abs(actual - expected) <= tolerance : actual === expected);
+      const line = document.createElement('pre');
+      line.textContent = (ok ? '✓ ' : '✗ ') + name +
+        (ok ? '' : `   expected ${JSON.stringify(expected)} got ${JSON.stringify(actual)}`);
+      line.className = ok ? 'pass' : 'fail';
+      out.appendChild(line);
+      ok ? passed++ : failed++;
+    }
+
+    const { tiltToGravity, shouldLock, allLocked, slotPositions } = window.TiltHelpers;
+
+    // tiltToGravity
+    assertEq('tiltToGravity(0, 0) → zero',
+      tiltToGravity(0, 0), { x: 0, y: 0 });
+    assertEq('tiltToGravity(30, 0) → full y',
+      tiltToGravity(30, 0), { x: 0, y: 1.2 });
+    assertEq('tiltToGravity(0, 30) → full x',
+      tiltToGravity(0, 30), { x: 1.2, y: 0 });
+    assertEq('tiltToGravity(15, 0) → half y',
+      tiltToGravity(15, 0), { x: 0, y: 0.6 });
+    assertEq('tiltToGravity(90, 0) → clamped to full y',
+      tiltToGravity(90, 0), { x: 0, y: 1.2 });
+    assertEq('tiltToGravity(-90, -90) → clamped, both negative',
+      tiltToGravity(-90, -90), { x: -1.2, y: -1.2 });
+
+    // shouldLock
+    assertEq('shouldLock close + slow → true',
+      shouldLock(10, 1.0), true);
+    assertEq('shouldLock close + fast → false',
+      shouldLock(10, 5.0), false);
+    assertEq('shouldLock far + slow → false',
+      shouldLock(100, 1.0), false);
+    assertEq('shouldLock far + fast → false',
+      shouldLock(100, 5.0), false);
+
+    // allLocked
+    assertEq('allLocked all true → true',
+      allLocked([{ locked: true }, { locked: true }, { locked: true }]), true);
+    assertEq('allLocked one false → false',
+      allLocked([{ locked: true }, { locked: false }, { locked: true }]), false);
+    assertEq('allLocked empty → true',
+      allLocked([]), true);
+
+    // slotPositions
+    const slots = slotPositions({ x: 100, y: 100 }, 50, 3);
+    assertEq('slotPositions returns 3 entries', slots.length, 3);
+    // Centroid of the three slots should equal the bowl center
+    const cx = slots.reduce((s, p) => s + p.x, 0) / 3;
+    const cy = slots.reduce((s, p) => s + p.y, 0) / 3;
+    assertEq('slotPositions centroid x ≈ bowl center x', cx, 100, 0.001);
+    assertEq('slotPositions centroid y ≈ bowl center y', cy, 100, 0.001);
+    // Each slot should sit inside the bowl
+    slots.forEach((p, i) => {
+      const d = Math.hypot(p.x - 100, p.y - 100);
+      assertEq(`slot ${i} inside bowl`, d < 50, true);
+    });
+
+    const summary = document.createElement('h1');
+    summary.textContent = `${passed} passed, ${failed} failed`;
+    summary.className = failed ? 'fail' : 'pass';
+    out.prepend(summary);
+  </script>
+</body>
+</html>
