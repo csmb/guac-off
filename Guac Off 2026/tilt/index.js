@@ -18,7 +18,7 @@
   // --- Engine ---
   const engine = Engine.create();
   engine.gravity.x = 0;
-  engine.gravity.y = 1.0;   // hardcoded straight down for now
+  engine.gravity.y = 0;
 
   // Walls — placed just outside the board edges
   const walls = [
@@ -44,8 +44,25 @@
     return { el, body, locked: false };
   });
 
+  // --- Tilt input ---
+  let smoothBeta = 0;
+  let smoothGamma = 0;
+  let tiltActive = false;
+
+  function onOrientation(event) {
+    tiltActive = true;
+    const beta = event.beta || 0;     // front-back, deg
+    const gamma = event.gamma || 0;   // left-right, deg
+    smoothBeta = smoothBeta * 0.85 + beta * 0.15;
+    smoothGamma = smoothGamma * 0.85 + gamma * 0.15;
+  }
+  window.addEventListener('deviceorientation', onOrientation);
+
   // --- Render loop ---
   function tick() {
+    const g = H.tiltToGravity(smoothBeta, smoothGamma);
+    engine.gravity.x = g.x;
+    engine.gravity.y = g.y;
     Engine.update(engine, 1000 / 60);
     for (const ing of ingredients) {
       const { x, y } = ing.body.position;
