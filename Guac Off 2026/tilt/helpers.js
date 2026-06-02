@@ -5,8 +5,8 @@
 
   const STRENGTH = 1.2;        // gravity magnitude at full tilt
   const TILT_FULL_DEG = 30;    // degrees of tilt that map to full gravity
-  const SNAP_RADIUS = 40;      // px from bowl center within which an ingredient can lock
-  const SNAP_SPEED = 1.5;      // max px/frame speed allowed for locking
+  const SNAP_RADIUS = 60;      // px from bowl center within which an ingredient can lock
+  const SNAP_SPEED = 2.5;      // max px/frame speed allowed for locking
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
