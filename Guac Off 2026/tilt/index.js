@@ -224,17 +224,18 @@
   const playBtn = document.getElementById('play-btn');
 
   async function requestMotionPermission() {
-    // iOS 13+: must call from a user gesture
-    const need = typeof DeviceMotionEvent !== 'undefined'
-      && typeof DeviceMotionEvent.requestPermission === 'function';
+    // iOS 13+: requestPermission MUST be called synchronously inside a user
+    // gesture frame (no `await` before this call in the click handler), or
+    // WebKit silently rejects without showing the native dialog.
+    // We listen to `deviceorientation` events, so we only need orientation
+    // permission — requesting both Motion AND Orientation chains awaits
+    // which compounds gesture-loss risk for no real benefit.
+    const need = typeof DeviceOrientationEvent !== 'undefined'
+      && typeof DeviceOrientationEvent.requestPermission === 'function';
     if (!need) return 'granted'; // non-iOS browsers fire events freely
     try {
-      const m = await DeviceMotionEvent.requestPermission();
-      const o = (typeof DeviceOrientationEvent !== 'undefined'
-        && typeof DeviceOrientationEvent.requestPermission === 'function')
-        ? await DeviceOrientationEvent.requestPermission()
-        : 'granted';
-      return (m === 'granted' && o === 'granted') ? 'granted' : 'denied';
+      const result = await DeviceOrientationEvent.requestPermission();
+      return result === 'granted' ? 'granted' : 'denied';
     } catch (e) { return 'denied'; }
   }
 
@@ -256,11 +257,17 @@
   }
 
   playBtn.addEventListener('click', async function () {
-    // Init audio (browser policy requires a gesture)
+    // Init audio synchronously inside the gesture. We fire `resume()` without
+    // awaiting it — awaiting here would yield to the microtask queue and
+    // burn the iOS transient-activation window before we get to call
+    // DeviceOrientationEvent.requestPermission(), causing the native dialog
+    // to silently fail.
     ensureAudio();
-    if (audioCtx && audioCtx.state === 'suspended') {
-      try { await audioCtx.resume(); } catch (e) {}
-    }
+    if (audioCtx) audioCtx.resume().catch(function () {});
+
+    // First await MUST be requestMotionPermission so the underlying
+    // DeviceOrientationEvent.requestPermission() call still runs inside
+    // the user-gesture frame.
     const status = await requestMotionPermission();
     if (status === 'granted') {
       startGame();
