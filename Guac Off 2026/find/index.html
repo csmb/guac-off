@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥑</text></svg>">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Point to the Party · SF GUAC OFF 2026</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <main id="stage" class="stage">
+    <div id="glow" class="glow" aria-hidden="true"></div>
+
+    <!-- Cover -->
+    <div id="cover" class="overlay" aria-hidden="false">
+      <h1 class="title">🧭 Point to the Party</h1>
+      <p class="sub">The party's location? IYKYK. Aim your phone at it to find out.</p>
+      <button id="start-btn" class="btn" type="button">🥑 Start the hunt</button>
+    </div>
+
+    <!-- Pre-prime explainer -->
+    <div id="prime" class="overlay" aria-hidden="true" hidden>
+      <p class="sub" id="prime-text">We'll use your phone's compass + location to point you at the party.
+        Nothing is stored. Hold your phone up and aim it at the horizon like a camera.</p>
+      <button id="prime-btn" class="btn" type="button">Got it — let's go</button>
+    </div>
+
+    <!-- Transient status (locating / errors / calibration) -->
+    <div id="status" class="overlay" aria-hidden="true" hidden role="status">
+      <p class="sub" id="status-text"></p>
+    </div>
+
+    <!-- Hunt hint -->
+    <div id="hunt" class="hunt" aria-hidden="true" hidden>
+      <p class="hunt-hint" id="hunt-hint">Slowly turn around… you're getting warmer 🔥</p>
+    </div>
+
+    <!-- Reveal card -->
+    <div id="reveal" class="overlay reveal" aria-hidden="true" hidden tabindex="-1">
+      <p class="reveal-burst" id="reveal-burst" aria-hidden="true">🥑🎉🥑</p>
+      <h2 class="reveal-headline">YOU FOUND THE PARTY</h2>
+      <p class="reveal-payoff" id="reveal-payoff">Told you. Now bring chips.</p>
+      <p class="reveal-address" id="reveal-address"></p>
+      <p class="reveal-when">Sept 12 · 1pm 'til the last chip</p>
+      <a id="maps-link" class="btn maps" href="#" target="_blank" rel="noopener">Open in Maps ↗</a>
+      <button id="play-again" class="link-btn" type="button" hidden>play the hunt again</button>
+    </div>
+
+    <!-- Hidden escape hatch -->
+    <button id="escape" class="escape" type="button" hidden>can't find it? just show me</button>
+  </main>
+
+  <script src="helpers.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
