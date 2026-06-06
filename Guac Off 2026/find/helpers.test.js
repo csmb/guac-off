@@ -25,5 +25,17 @@ eq('haversine 1deg lng @equator ~111195m', H.haversineMeters({lat:0,lng:0}, {lat
 eq('isNearVenue 50m true', H.isNearVenue(50), true);
 eq('isNearVenue 200m false', H.isNearVenue(200), false);
 
+// --- angleDiff: smallest absolute difference [0,180] ---
+eq('angleDiff 350,10 -> 20', H.angleDiff(350, 10), 20, 0.001);
+eq('angleDiff 10,350 -> 20', H.angleDiff(10, 350), 20, 0.001);
+eq('angleDiff 12,0 -> 12', H.angleDiff(12, 0), 12, 0.001);
+eq('angleDiff 0,180 -> 180', H.angleDiff(0, 180), 180, 0.001);
+
+// --- warmth: 1 at aligned, 0 by WARMTH_WINDOW_DEG (45) ---
+eq('warmth 0 -> 1', H.warmth(0), 1, 0.001);
+eq('warmth 45 -> 0', H.warmth(45), 0, 0.001);
+eq('warmth 90 -> 0 (clamped)', H.warmth(90), 0, 0.001);
+eq('warmth 22.5 -> 0.5', H.warmth(22.5), 0.5, 0.001);
+
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

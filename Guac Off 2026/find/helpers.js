@@ -38,8 +38,18 @@
 
   function isNearVenue(meters) { return meters < NEAR_VENUE_M; }
 
+  function angleDiff(a, b) {
+    const d = Math.abs(a - b) % 360;
+    return d > 180 ? 360 - d : d;
+  }
+
+  function warmth(diff) {
+    return clamp(1 - diff / WARMTH_WINDOW_DEG, 0, 1);
+  }
+
   return {
     bearing, haversineMeters, isNearVenue, clamp, toRad, toDeg,
+    angleDiff, warmth,
     constants: { WARMTH_WINDOW_DEG, LOCK_DEG, LOCK_HOLD_MS, NEAR_VENUE_M, ESCAPE_DELAY_MS, SMOOTH_FACTOR },
   };
 });
