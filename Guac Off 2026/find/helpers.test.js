@@ -34,6 +34,30 @@ eq('aim alpha=270,beta=90 -> east(90)', H.pointingAzimuth(270, 90, 0), 90,  0.01
 // Tilting forward (beta=60) at alpha=0 still aims north.
 eq('aim alpha=0,beta=60 -> north(0)',   H.pointingAzimuth(0,   60, 0), 0,   0.01);
 
+// --- 3D aim: pointingVector / bearingVector / angleBetween / rotateAboutUp ---
+// Held bolt upright (beta=90) aiming north: level vector straight at the horizon.
+const vUp = H.pointingVector(0, 90, 0);
+eq('pointingVector(0,90,0).u ~ 0 (level)', vUp.u, 0, 1e-6);
+eq('pointingVector(0,90,0) aims due north', H.angleBetween(vUp, H.bearingVector(0)), 0, 0.01);
+// Correct heading but phone tilted 20deg off level -> 20deg of aim error (compass alone wouldn't notice).
+eq('pitch 20deg off -> 20deg 3D error', H.angleBetween(H.pointingVector(0, 70, 0), H.bearingVector(0)), 20, 0.1);
+// Heading 90deg off but level -> 90deg error.
+eq('heading 90deg off + level -> 90', H.angleBetween(H.pointingVector(90, 90, 0), H.bearingVector(0)), 90, 0.01);
+// bearingVector basics (horizon-level unit vectors).
+eq('bearingVector(0).n ~ 1 (north)', H.bearingVector(0).n, 1, 1e-6);
+eq('bearingVector(90).e ~ 1 (east)', H.bearingVector(90).e, 1, 1e-6);
+// angleBetween orthogonals.
+eq('angleBetween north vs east = 90', H.angleBetween({e:0,n:1,u:0}, {e:1,n:0,u:0}), 90, 1e-6);
+eq('angleBetween north vs up = 90', H.angleBetween({e:0,n:1,u:0}, {e:0,n:0,u:1}), 90, 1e-6);
+// rotateAboutUp shifts azimuth, leaves elevation: north + 90 -> east, up unchanged.
+const rot = H.rotateAboutUp({e:0, n:1, u:0}, 90);
+eq('rotateAboutUp north+90 -> east (e~1)', rot.e, 1, 1e-6);
+eq('rotateAboutUp keeps up component', rot.u, 0, 1e-6);
+// smoothVector converges to a steady direction.
+let sv = {e:1, n:0, u:0};
+for (let i = 0; i < 50; i++) sv = H.smoothVector(sv, {e:0, n:1, u:0}, 0.8);
+eq('smoothVector converges to north (n~1)', sv.n, 1, 0.01);
+
 // --- enc/dec round-trip (light obfuscation, not crypto) ---
 eq('dec(enc) round-trips', H.dec(H.enc('Dolores Park, SF')), 'Dolores Park, SF');
 eq('enc output is not plaintext', H.enc('Dolores Park, SF').includes('Dolores'), false);

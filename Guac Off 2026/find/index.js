@@ -2,8 +2,9 @@
 
 (function () {
   const H = window.FindHelpers;
-  const { bearing, haversineMeters, isNearVenue, angleDiff, warmth,
-          pointingAzimuth, angleState, smoothAngle, shouldLock, dec } = H;
+  const { bearing, haversineMeters, isNearVenue, warmth,
+          pointingVector, bearingVector, angleBetween, rotateAboutUp, smoothVector,
+          shouldLock, dec } = H;
   const C = H.constants;
 
   // ===== EDIT THIS ONE BLOCK (real venue) =====
@@ -92,8 +93,8 @@
   }
 
   // --- Hunt loop ---
-  let heading = null;         // smoothed angleState
-  let targetBearing = 0;
+  let aim = null;             // smoothed 3D pointing direction {e,n,u}
+  let targetVec = null;       // 3D direction to the party (horizon-level)
   let gotOrientation = false;
   let gotAbsolute = false;    // true once a deviceorientationabsolute event has fired
   let lockStart = 0;
@@ -102,23 +103,21 @@
 
   function onOrientation(e) {
     gotOrientation = true;
-    let az, usesDeclination;
+    let vec;
     if (typeof e.webkitCompassHeading === 'number' && !Number.isNaN(e.webkitCompassHeading)) {
       if (typeof e.webkitCompassAccuracy === 'number' && (e.webkitCompassAccuracy < 0 || e.webkitCompassAccuracy > 25)) {
         huntHint.textContent = 'Wave your phone in a figure-8 to calibrate 🧭';
-        return; // don't update heading while accuracy is unusable
+        return; // don't update aim while accuracy is unusable
       }
       // iOS: anchor absolute (magnetic) north; webkitCompassHeading ~ 360 - alpha when flat.
-      az = pointingAzimuth(360 - e.webkitCompassHeading, e.beta ?? 0, e.gamma ?? 0);
-      usesDeclination = true; // webkitCompassHeading is magnetic; correct to true north
+      vec = pointingVector(360 - e.webkitCompassHeading, e.beta ?? 0, e.gamma ?? 0);
+      vec = rotateAboutUp(vec, MAGNETIC_DECLINATION_DEG); // magnetic -> true north (azimuth only)
     } else if (e.absolute === true && typeof e.alpha === 'number') {
-      az = pointingAzimuth(e.alpha, e.beta ?? 0, e.gamma ?? 0); // Android absolute ~ true north
-      usesDeclination = false;
+      vec = pointingVector(e.alpha, e.beta ?? 0, e.gamma ?? 0); // Android absolute ~ true north
     } else {
       return; // relative-only orientation: not usable as a compass
     }
-    if (usesDeclination) az = (az + MAGNETIC_DECLINATION_DEG + 360) % 360;
-    heading = heading ? smoothAngle(heading, az) : angleState(az);
+    aim = aim ? smoothVector(aim, vec) : vec;
   }
 
   // Android fires BOTH events; only let the relative one drive the compass if no
@@ -136,13 +135,13 @@
 
   function tick() {
     if (!running) { rafId = null; return; }
-    if (heading) {
-      const diff = angleDiff(heading.deg, targetBearing);
+    if (aim && targetVec) {
+      const diff = angleBetween(aim, targetVec);
       const w = warmth(diff);
       glow.style.setProperty('--warmth', w.toFixed(3));
-      huntHint.textContent = w > 0.8 ? "🔥 SO close — hold it there!"
-        : w > 0.4 ? "Getting warmer… 🔥"
-        : "Slowly turn around to find the party ❄️";
+      huntHint.textContent = w > 0.8 ? "🔥 SO close — hold it steady!"
+        : w > 0.4 ? "Warmer — aim right at it 🔥"
+        : "Aim your phone around to find the party ❄️";
       updateTone(w); tickHaptic(w);
       if (diff < C.LOCK_DEG) {
         if (!lockStart) lockStart = performance.now();
@@ -154,7 +153,7 @@
 
   function startHunt() {
     hide(cover); hide(prime); hide(status); show(hunt);
-    targetBearing = bearing(currentPos, venue);
+    targetVec = bearingVector(bearing(currentPos, venue));
     addOrientationListeners();
     running = true; startTone();
     if (rafId === null) rafId = requestAnimationFrame(tick);
@@ -215,7 +214,7 @@
   escape.addEventListener('click', function () { doReveal(false); });
   playAgain.addEventListener('click', function () {
     try { localStorage.removeItem(STORE_KEY); } catch (e) {}
-    heading = null; gotOrientation = false; gotAbsolute = false; lockStart = 0;
+    aim = null; targetVec = null; gotOrientation = false; gotAbsolute = false; lockStart = 0;
     hide(reveal); show(cover);
   });
 

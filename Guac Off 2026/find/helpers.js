@@ -74,6 +74,55 @@
     return (toDeg(Math.atan2(east, north)) + 360) % 360;
   }
 
+  // --- 3D aim (heading AND elevation, not just compass) ---
+  // Full unit vector in the world frame (x=east, y=north, z=up) the camera axis
+  // points along. Unlike pointingAzimuth, this keeps the up/down tilt, so you have
+  // to physically aim at the target — not just match its compass bearing.
+  // Feed an absolute, north-referenced alpha (see pointingAzimuth note).
+  function pointingVector(alphaDeg, betaDeg, gammaDeg) {
+    const m = rotationMatrix(alphaDeg, betaDeg, gammaDeg);
+    const [ax, ay, az] = POINT_AXIS;
+    return {
+      e: m[0][0] * ax + m[0][1] * ay + m[0][2] * az,
+      n: m[1][0] * ax + m[1][1] * ay + m[1][2] * az,
+      u: m[2][0] * ax + m[2][1] * ay + m[2][2] * az,
+    };
+  }
+
+  // Unit vector toward a compass bearing at the horizon (the party is at ground
+  // level, so the direction to it is horizontal — elevation 0).
+  function bearingVector(bearingDeg) {
+    const b = toRad(bearingDeg);
+    return { e: Math.sin(b), n: Math.cos(b), u: 0 };
+  }
+
+  // Angle (deg) between two 3D vectors. This is the single "how far off your aim is"
+  // number — it folds heading error and elevation error into one.
+  function angleBetween(a, b) {
+    const dot = a.e * b.e + a.n * b.n + a.u * b.u;
+    const ma = Math.hypot(a.e, a.n, a.u), mb = Math.hypot(b.e, b.n, b.u);
+    if (ma === 0 || mb === 0) return 180;
+    return toDeg(Math.acos(clamp(dot / (ma * mb), -1, 1)));
+  }
+
+  // Rotate a vector about the vertical (up) axis — used to apply magnetic
+  // declination, which shifts azimuth only and leaves elevation untouched.
+  function rotateAboutUp(v, deg) {
+    const r = toRad(deg), c = Math.cos(r), s = Math.sin(r);
+    return { e: v.e * c + v.n * s, n: v.n * c - v.e * s, u: v.u };
+  }
+
+  // Low-pass smoothing of a direction: lerp components, renormalize. Smoothing in
+  // vector space sidesteps the 0/360 seam entirely (no need for angleState here).
+  function smoothVector(state, v, factor) {
+    const f = (factor == null) ? SMOOTH_FACTOR : factor;
+    const e = f * state.e + (1 - f) * v.e;
+    const n = f * state.n + (1 - f) * v.n;
+    const u = f * state.u + (1 - f) * v.u;
+    const m = Math.hypot(e, n, u) || 1;
+    return { e: e / m, n: n / m, u: u / m };
+  }
+
   function angleState(deg) {
     const r = toRad(deg);
     return { sin: Math.sin(r), cos: Math.cos(r), deg: (deg % 360 + 360) % 360 };
@@ -113,6 +162,7 @@
     bearing, haversineMeters, isNearVenue, clamp, toRad, toDeg,
     angleDiff, warmth,
     rotationMatrix, pointingAzimuth,
+    pointingVector, bearingVector, angleBetween, rotateAboutUp, smoothVector,
     angleState, smoothAngle,
     enc, dec, shouldLock,
     constants: { WARMTH_WINDOW_DEG, LOCK_DEG, LOCK_HOLD_MS, NEAR_VENUE_M, ESCAPE_DELAY_MS, SMOOTH_FACTOR },
