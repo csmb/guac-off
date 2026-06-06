@@ -61,8 +61,11 @@
 
   const POINT_AXIS = [0, 0, -1]; // device camera axis (out the back). Top-edge = [0,-1,0].
 
+  // Returns the compass azimuth (deg, clockwise from north) the camera axis points at.
+  // NOTE: feed an *absolute*, north-referenced alpha (e.g. iOS: 360 - webkitCompassHeading;
+  // Android: deviceorientationabsolute alpha). The math already accounts for alpha's
+  // direction, so callers should NOT add their own `360 - heading` correction here.
   function pointingAzimuth(alphaDeg, betaDeg, gammaDeg) {
-
     const m = rotationMatrix(alphaDeg, betaDeg, gammaDeg);
     const [ax, ay, az] = POINT_AXIS;
     // world vector = m * axis
