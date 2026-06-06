@@ -25,6 +25,15 @@ eq('haversine 1deg lng @equator ~111195m', H.haversineMeters({lat:0,lng:0}, {lat
 eq('isNearVenue 50m true', H.isNearVenue(50), true);
 eq('isNearVenue 200m false', H.isNearVenue(200), false);
 
+// --- pointingAzimuth: camera axis (device -Z). Hand-verified cases. ---
+// Phone tilted up 90deg (held upright, aiming); alpha rotates the aim around.
+eq('aim alpha=0,beta=90 -> north(0)',   H.pointingAzimuth(0,   90, 0), 0,   0.01);
+eq('aim alpha=90,beta=90 -> west(270)', H.pointingAzimuth(90,  90, 0), 270, 0.01);
+eq('aim alpha=180,beta=90 -> south(180)', H.pointingAzimuth(180, 90, 0), 180, 0.01);
+eq('aim alpha=270,beta=90 -> east(90)', H.pointingAzimuth(270, 90, 0), 90,  0.01);
+// Tilting forward (beta=60) at alpha=0 still aims north.
+eq('aim alpha=0,beta=60 -> north(0)',   H.pointingAzimuth(0,   60, 0), 0,   0.01);
+
 // --- angleDiff: smallest absolute difference [0,180] ---
 eq('angleDiff 350,10 -> 20', H.angleDiff(350, 10), 20, 0.001);
 eq('angleDiff 10,350 -> 20', H.angleDiff(10, 350), 20, 0.001);

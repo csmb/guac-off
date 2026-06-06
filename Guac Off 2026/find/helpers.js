@@ -47,9 +47,33 @@
     return clamp(1 - diff / WARMTH_WINDOW_DEG, 0, 1);
   }
 
+  // W3C DeviceOrientation ZXY rotation matrix (device -> world; world: X=east, Y=north, Z=up).
+  function rotationMatrix(alphaDeg, betaDeg, gammaDeg) {
+    const z = toRad(alphaDeg), x = toRad(betaDeg), y = toRad(gammaDeg);
+    const cX = Math.cos(x), cY = Math.cos(y), cZ = Math.cos(z);
+    const sX = Math.sin(x), sY = Math.sin(y), sZ = Math.sin(z);
+    return [
+      [cZ * cY - sZ * sX * sY, -cX * sZ, cZ * sY + cY * sZ * sX],
+      [cY * sZ + cZ * sX * sY,  cZ * cX, sZ * sY - cZ * cY * sX],
+      [-cX * sY,                sX,      cX * cY],
+    ];
+  }
+
+  const POINT_AXIS = [0, 0, -1]; // device camera axis (out the back). Top-edge = [0,-1,0].
+
+  function pointingAzimuth(alphaDeg, betaDeg, gammaDeg) {
+    const m = rotationMatrix(alphaDeg, betaDeg, gammaDeg);
+    const [ax, ay, az] = POINT_AXIS;
+    // world vector = m * axis
+    const east  = m[0][0] * ax + m[0][1] * ay + m[0][2] * az;
+    const north = m[1][0] * ax + m[1][1] * ay + m[1][2] * az;
+    return (toDeg(Math.atan2(east, north)) + 360) % 360;
+  }
+
   return {
     bearing, haversineMeters, isNearVenue, clamp, toRad, toDeg,
     angleDiff, warmth,
+    rotationMatrix, pointingAzimuth,
     constants: { WARMTH_WINDOW_DEG, LOCK_DEG, LOCK_HOLD_MS, NEAR_VENUE_M, ESCAPE_DELAY_MS, SMOOTH_FACTOR },
   };
 });
