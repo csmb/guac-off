@@ -7,10 +7,11 @@
   const C = H.constants;
 
   // ===== EDIT THIS ONE BLOCK (real venue) =====
-  // Generate replacements with:
+  // Generate replacements (run in a terminal — do NOT paste the plaintext lat/lng or
+  // address back into a comment here, or view-source spoils the hunt):
   //   node -e "const H=require('./helpers.js'); console.log(H.enc(JSON.stringify({lat:LAT,lng:LNG}))); console.log(H.enc('FULL ADDRESS'));"
-  const VENUE_GEO  = 'HFcNAhtEXFRCT1RaX1BLVw0NCERcSkRTUUFSVFFMHA==';   // enc('{"lat":37.7596,"lng":-122.4269}') — Dolores Park placeholder
-  const VENUE_ADDR = 'IxoNDB0DFUclABEESkY0FA9DKRQHCRYIEAwJSkc2IA==';  // enc('Dolores Park, San Francisco, CA')
+  const VENUE_GEO  = 'HFcNAhtEXFRCT1RaX1BLVw0NCERcSkRTUUFSVFFMHA==';   // encoded venue coords (placeholder)
+  const VENUE_ADDR = 'IxoNDB0DFUclABEESkY0FA9DKRQHCRYIEAwJSkc2IA==';  // encoded venue address (placeholder)
   const MAGNETIC_DECLINATION_DEG = 13;          // SF; retune per venue (only applied to iOS magnetic heading)
   // ============================================
 
