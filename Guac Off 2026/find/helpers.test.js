@@ -38,9 +38,10 @@ eq('aim alpha=0,beta=60 -> north(0)',   H.pointingAzimuth(0,   60, 0), 0,   0.01
 eq('dec(enc) round-trips', H.dec(H.enc('Dolores Park, SF')), 'Dolores Park, SF');
 eq('enc output is not plaintext', H.enc('Dolores Park, SF').includes('Dolores'), false);
 
-// --- shouldLock: aligned AND held long enough ---
-eq('shouldLock aligned+held -> true', H.shouldLock(8, 600), true);
-eq('shouldLock aligned+brief -> false', H.shouldLock(8, 200), false);
+// --- shouldLock: aligned (within LOCK_DEG=5) AND held long enough ---
+eq('shouldLock aligned+held -> true', H.shouldLock(3, 600), true);
+eq('shouldLock aligned+brief -> false', H.shouldLock(3, 200), false);
+eq('shouldLock just-outside-cone+held -> false', H.shouldLock(8, 600), false);
 eq('shouldLock misaligned+held -> false', H.shouldLock(20, 600), false);
 
 // --- smoothing across the 0/360 seam ---
@@ -59,11 +60,11 @@ eq('angleDiff 10,350 -> 20', H.angleDiff(10, 350), 20, 0.001);
 eq('angleDiff 12,0 -> 12', H.angleDiff(12, 0), 12, 0.001);
 eq('angleDiff 0,180 -> 180', H.angleDiff(0, 180), 180, 0.001);
 
-// --- warmth: 1 at aligned, 0 by WARMTH_WINDOW_DEG (45) ---
+// --- warmth: 1 at aligned, 0 by WARMTH_WINDOW_DEG (18) ---
 eq('warmth 0 -> 1', H.warmth(0), 1, 0.001);
-eq('warmth 45 -> 0', H.warmth(45), 0, 0.001);
+eq('warmth 18 -> 0 (window edge)', H.warmth(18), 0, 0.001);
 eq('warmth 90 -> 0 (clamped)', H.warmth(90), 0, 0.001);
-eq('warmth 22.5 -> 0.5', H.warmth(22.5), 0.5, 0.001);
+eq('warmth 9 -> 0.5', H.warmth(9), 0.5, 0.001);
 
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
