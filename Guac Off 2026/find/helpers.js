@@ -62,6 +62,7 @@
   const POINT_AXIS = [0, 0, -1]; // device camera axis (out the back). Top-edge = [0,-1,0].
 
   function pointingAzimuth(alphaDeg, betaDeg, gammaDeg) {
+
     const m = rotationMatrix(alphaDeg, betaDeg, gammaDeg);
     const [ax, ay, az] = POINT_AXIS;
     // world vector = m * axis
@@ -70,10 +71,25 @@
     return (toDeg(Math.atan2(east, north)) + 360) % 360;
   }
 
+  function angleState(deg) {
+    const r = toRad(deg);
+    return { sin: Math.sin(r), cos: Math.cos(r), deg: (deg % 360 + 360) % 360 };
+  }
+
+  function smoothAngle(state, newDeg, factor) {
+    const f = (factor == null) ? SMOOTH_FACTOR : factor;
+    const r = toRad(newDeg);
+    const sin = f * state.sin + (1 - f) * Math.sin(r);
+    const cos = f * state.cos + (1 - f) * Math.cos(r);
+    const deg = (toDeg(Math.atan2(sin, cos)) + 360) % 360;
+    return { sin, cos, deg };
+  }
+
   return {
     bearing, haversineMeters, isNearVenue, clamp, toRad, toDeg,
     angleDiff, warmth,
     rotationMatrix, pointingAzimuth,
+    angleState, smoothAngle,
     constants: { WARMTH_WINDOW_DEG, LOCK_DEG, LOCK_HOLD_MS, NEAR_VENUE_M, ESCAPE_DELAY_MS, SMOOTH_FACTOR },
   };
 });

@@ -34,6 +34,16 @@ eq('aim alpha=270,beta=90 -> east(90)', H.pointingAzimuth(270, 90, 0), 90,  0.01
 // Tilting forward (beta=60) at alpha=0 still aims north.
 eq('aim alpha=0,beta=60 -> north(0)',   H.pointingAzimuth(0,   60, 0), 0,   0.01);
 
+// --- smoothing across the 0/360 seam ---
+// Average of 358 and 2 must be ~0, never ~180.
+const st = H.angleState(358);
+const sm = H.smoothAngle(st, 2, 0.5);
+eq('smoothAngle 358->2 ~ 0 (not 180)', ((sm.deg + 360) % 360), 0, 0.001);
+// Smoothing toward a steady reading converges to it.
+let s2 = H.angleState(0);
+for (let i = 0; i < 50; i++) s2 = H.smoothAngle(s2, 90, 0.8);
+eq('smoothAngle converges to steady 90', s2.deg, 90, 0.5);
+
 // --- angleDiff: smallest absolute difference [0,180] ---
 eq('angleDiff 350,10 -> 20', H.angleDiff(350, 10), 20, 0.001);
 eq('angleDiff 10,350 -> 20', H.angleDiff(10, 350), 20, 0.001);
