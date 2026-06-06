@@ -92,13 +92,18 @@ body {
     letter-spacing: 1px;
   }
 
-  /* Shrink the always-on music toggle so it doesn't dominate a phone screen */
-  .music-toggle {
+  /* Shrink the always-on music toggle so it doesn't dominate a phone screen, and
+     lift it above the scroll-hint (bottom:12px) so it clears both that button and
+     the hero/party-details seam it used to overlap.
+     NOTE: selector is intentionally `.game-container .music-toggle` (specificity
+     0,2,0) — the base `.music-toggle` rule appears LATER in this file, so an
+     equal-specificity mobile override would lose the cascade and be ignored. */
+  .game-container .music-toggle {
     padding: 5px 10px;
     font-size: 8px;
     border-width: 1px;
     box-shadow: 2px 2px 0px var(--text-color);
-    bottom: 10px;
+    bottom: 68px;
     right: 10px;
   }
 }
