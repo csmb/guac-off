@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Find helpers — tests</title>
+  <style>
+    body { font-family: ui-monospace, monospace; padding: 1rem; background: #111; color: #eee; }
+    .pass { color: #39ff14; } .fail { color: #ff007f; }
+    h1 { font-size: 1rem; } pre { margin: 0.2rem 0; }
+  </style>
+</head>
+<body>
+  <h1>Find helpers — tests</h1>
+  <div id="out"></div>
+  <script src="helpers.js"></script>
+  <script>
+    const out = document.getElementById('out');
+    let passed = 0, failed = 0;
+    function eq(name, actual, expected, tol = 0) {
+      const ok = (typeof actual === 'object')
+        ? JSON.stringify(actual) === JSON.stringify(expected)
+        : (tol ? Math.abs(actual - expected) <= tol : actual === expected);
+      const line = document.createElement('pre');
+      line.textContent = (ok ? '✓ ' : '✗ ') + name +
+        (ok ? '' : `   expected ${JSON.stringify(expected)} got ${JSON.stringify(actual)}`);
+      line.className = ok ? 'pass' : 'fail';
+      out.appendChild(line);
+      ok ? passed++ : failed++;
+    }
+    const H = window.FindHelpers;
+    eq('bearing due east', H.bearing({lat:0,lng:0},{lat:0,lng:1}), 90, 0.001);
+    eq('angleDiff 350,10 -> 20', H.angleDiff(350,10), 20, 0.001);
+    eq('warmth 22.5 -> 0.5', H.warmth(22.5), 0.5, 0.001);
+    eq('aim alpha=90,beta=90 -> west(270)', H.pointingAzimuth(90,90,0), 270, 0.01);
+    eq('dec(enc) round-trips', H.dec(H.enc('hello')), 'hello');
+    eq('shouldLock aligned+held', H.shouldLock(8,600), true);
+    const summary = document.createElement('h1');
+    summary.textContent = `${passed} passed, ${failed} failed`;
+    summary.className = failed ? 'fail' : 'pass';
+    out.prepend(summary);
+  </script>
+</body>
+</html>
