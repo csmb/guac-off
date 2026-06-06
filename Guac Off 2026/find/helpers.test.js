@@ -34,6 +34,15 @@ eq('aim alpha=270,beta=90 -> east(90)', H.pointingAzimuth(270, 90, 0), 90,  0.01
 // Tilting forward (beta=60) at alpha=0 still aims north.
 eq('aim alpha=0,beta=60 -> north(0)',   H.pointingAzimuth(0,   60, 0), 0,   0.01);
 
+// --- enc/dec round-trip (light obfuscation, not crypto) ---
+eq('dec(enc) round-trips', H.dec(H.enc('Dolores Park, SF')), 'Dolores Park, SF');
+eq('enc output is not plaintext', H.enc('Dolores Park, SF').includes('Dolores'), false);
+
+// --- shouldLock: aligned AND held long enough ---
+eq('shouldLock aligned+held -> true', H.shouldLock(8, 600), true);
+eq('shouldLock aligned+brief -> false', H.shouldLock(8, 200), false);
+eq('shouldLock misaligned+held -> false', H.shouldLock(20, 600), false);
+
 // --- smoothing across the 0/360 seam ---
 // Average of 358 and 2 must be ~0, never ~180.
 const st = H.angleState(358);

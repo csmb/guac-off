@@ -85,11 +85,33 @@
     return { sin, cos, deg };
   }
 
+  const XOR_KEY = 'guacoff';
+  function b64encode(s) {
+    return (typeof btoa !== 'undefined') ? btoa(s) : Buffer.from(s, 'binary').toString('base64');
+  }
+  function b64decode(s) {
+    return (typeof atob !== 'undefined') ? atob(s) : Buffer.from(s, 'base64').toString('binary');
+  }
+  function xor(s) {
+    let out = '';
+    for (let i = 0; i < s.length; i++) {
+      out += String.fromCharCode(s.charCodeAt(i) ^ XOR_KEY.charCodeAt(i % XOR_KEY.length));
+    }
+    return out;
+  }
+  function enc(str) { return b64encode(xor(str)); }
+  function dec(b64) { return xor(b64decode(b64)); }
+
+  function shouldLock(diff, heldMs) {
+    return diff < LOCK_DEG && heldMs >= LOCK_HOLD_MS;
+  }
+
   return {
     bearing, haversineMeters, isNearVenue, clamp, toRad, toDeg,
     angleDiff, warmth,
     rotationMatrix, pointingAzimuth,
     angleState, smoothAngle,
+    enc, dec, shouldLock,
     constants: { WARMTH_WINDOW_DEG, LOCK_DEG, LOCK_HOLD_MS, NEAR_VENUE_M, ESCAPE_DELAY_MS, SMOOTH_FACTOR },
   };
 });
