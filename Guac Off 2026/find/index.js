@@ -76,12 +76,16 @@
 
   // --- Reveal + persistence ---
   function doReveal(persist) {
+    running = false;
+    removeOrientationListeners();
+    if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
     stopTone();
     const addr = dec(VENUE_ADDR);
     revealAddress.textContent = addr;
     mapsLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
     hide(cover); hide(prime); hide(status); hide(hunt); hide(escape);
     show(reveal);
+    reveal.focus();
     if (persist) { try { localStorage.setItem(STORE_KEY, '1'); } catch (e) {} playChime(); }
     if (persist) show(playAgain);
   }
@@ -89,24 +93,25 @@
   // --- Hunt loop ---
   let heading = null;         // smoothed angleState
   let targetBearing = 0;
-  let usesDeclination = false;
   let gotOrientation = false;
+  let gotAbsolute = false;    // true once a deviceorientationabsolute event has fired
   let lockStart = 0;
   let running = false;
+  let rafId = null;
 
   function onOrientation(e) {
     gotOrientation = true;
-    let az;
+    let az, usesDeclination;
     if (typeof e.webkitCompassHeading === 'number' && !Number.isNaN(e.webkitCompassHeading)) {
-      // iOS: anchor absolute (magnetic) north; webkitCompassHeading ~ 360 - alpha when flat.
-      az = pointingAzimuth(360 - e.webkitCompassHeading, e.beta || 0, e.gamma || 0);
-      usesDeclination = true;
       if (typeof e.webkitCompassAccuracy === 'number' && (e.webkitCompassAccuracy < 0 || e.webkitCompassAccuracy > 25)) {
         huntHint.textContent = 'Wave your phone in a figure-8 to calibrate 🧭';
         return; // don't update heading while accuracy is unusable
       }
+      // iOS: anchor absolute (magnetic) north; webkitCompassHeading ~ 360 - alpha when flat.
+      az = pointingAzimuth(360 - e.webkitCompassHeading, e.beta ?? 0, e.gamma ?? 0);
+      usesDeclination = true; // webkitCompassHeading is magnetic; correct to true north
     } else if (e.absolute === true && typeof e.alpha === 'number') {
-      az = pointingAzimuth(e.alpha, e.beta || 0, e.gamma || 0); // Android absolute ~ true north
+      az = pointingAzimuth(e.alpha, e.beta ?? 0, e.gamma ?? 0); // Android absolute ~ true north
       usesDeclination = false;
     } else {
       return; // relative-only orientation: not usable as a compass
@@ -115,8 +120,21 @@
     heading = heading ? smoothAngle(heading, az) : angleState(az);
   }
 
+  // Android fires BOTH events; only let the relative one drive the compass if no
+  // absolute event is available, so onOrientation runs once per sensor cycle.
+  function absHandler(e) { gotAbsolute = true; onOrientation(e); }
+  function relHandler(e) { if (!gotAbsolute) onOrientation(e); }
+  function addOrientationListeners() {
+    window.addEventListener('deviceorientationabsolute', absHandler);
+    window.addEventListener('deviceorientation', relHandler);
+  }
+  function removeOrientationListeners() {
+    window.removeEventListener('deviceorientationabsolute', absHandler);
+    window.removeEventListener('deviceorientation', relHandler);
+  }
+
   function tick() {
-    if (!running) return;
+    if (!running) { rafId = null; return; }
     if (heading) {
       const diff = angleDiff(heading.deg, targetBearing);
       const w = warmth(diff);
@@ -127,18 +145,18 @@
       updateTone(w); tickHaptic(w);
       if (diff < C.LOCK_DEG) {
         if (!lockStart) lockStart = performance.now();
-        if (shouldLock(diff, performance.now() - lockStart)) { running = false; doReveal(true); return; }
+        if (shouldLock(diff, performance.now() - lockStart)) { doReveal(true); return; }
       } else { lockStart = 0; }
     }
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
   }
 
   function startHunt() {
     hide(cover); hide(prime); hide(status); show(hunt);
     targetBearing = bearing(currentPos, venue);
-    window.addEventListener('deviceorientationabsolute', onOrientation);
-    window.addEventListener('deviceorientation', onOrientation);
-    running = true; startTone(); requestAnimationFrame(tick);
+    addOrientationListeners();
+    running = true; startTone();
+    if (rafId === null) rafId = requestAnimationFrame(tick);
     // Escape hatch fades in after the delay.
     setTimeout(function () { if (running) show(escape); }, C.ESCAPE_DELAY_MS);
     // Watchdog: no orientation events => desktop / unsupported.
@@ -187,15 +205,16 @@
     // Audio init synchronously inside the gesture (no await before it).
     ensureAudio(); if (audioCtx) audioCtx.resume().catch(function () {});
     // requestPermission MUST be the first await (iOS gesture window).
-    const status = await requestMotionPermission();
-    if (status === 'unsupported') { setStatus("Best on a phone — open this page on your phone 📱"); show(escape); return; }
-    if (status === 'denied') { setStatus("Motion access is needed — refresh and tap Allow."); show(escape); return; }
+    const motionPermission = await requestMotionPermission();
+    if (motionPermission === 'unsupported') { setStatus("Best on a phone — open this page on your phone 📱"); show(escape); return; }
+    if (motionPermission === 'denied') { setStatus("Motion access is needed — refresh and tap Allow."); show(escape); return; }
     getLocation();
   });
 
-  escape.addEventListener('click', function () { running = false; doReveal(false); });
+  escape.addEventListener('click', function () { doReveal(false); });
   playAgain.addEventListener('click', function () {
     try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    heading = null; gotOrientation = false; gotAbsolute = false; lockStart = 0;
     hide(reveal); show(cover);
   });
 
