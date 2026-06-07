@@ -14,13 +14,13 @@ if ('serviceWorker' in navigator) {
   const H = window.FountainHelpers;
   const C = H.constants;
   const SPOUTS = H.SPOUTS;
+  const STROKE_STYLE = 'rgba(' + C.WATER_RGB + ', ' + C.STREAK_ALPHA + ')';  // invariant
 
   // --- DOM ---
   const fountainImg = document.querySelector('.fountain');
   const canvas = document.getElementById('water');
   const ctx = canvas.getContext('2d');
   const coverEl = document.getElementById('cover');
-  const coverSub = document.getElementById('cover-sub');
   const playBtn = document.getElementById('play-btn');
   const hintEl = document.getElementById('hint');
 
@@ -74,7 +74,7 @@ if ('serviceWorker' in navigator) {
 
   // --- Render loop ---
   let last = 0;
-  const bounds = { w: 0, h: 0, margin: 60, poolY: 0 };
+  const bounds = { w: 0, h: 0, margin: C.CULL_MARGIN, poolY: 0 };
 
   function tick(now) {
     let dt = (now - last) / 1000;
@@ -114,7 +114,7 @@ if ('serviceWorker' in navigator) {
 
     // Draw streaks (one batched path)
     ctx.clearRect(0, 0, VW, VH);
-    ctx.strokeStyle = 'rgba(' + C.WATER_RGB + ', ' + C.STREAK_ALPHA + ')';
+    ctx.strokeStyle = STROKE_STYLE;
     ctx.lineWidth = C.LINE_WIDTH;
     ctx.lineCap = 'round';
     ctx.beginPath();
@@ -142,7 +142,11 @@ if ('serviceWorker' in navigator) {
   function showHint(text) {
     hintEl.textContent = text;
     hintEl.classList.add('show');
-    setTimeout(function () { hintEl.classList.remove('show'); }, 3200);
+    hintEl.setAttribute('aria-hidden', 'false');
+    setTimeout(function () {
+      hintEl.classList.remove('show');
+      hintEl.setAttribute('aria-hidden', 'true');
+    }, 3200);
   }
 
   function start() {
@@ -152,6 +156,8 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('deviceorientation', onOrientation);
     window.addEventListener('resize', computeLayout);
     window.addEventListener('orientationchange', function () { setTimeout(computeLayout, 200); });
+    // The fountain image may finish decoding after start(); re-measure when it does.
+    if (!fountainImg.complete) fountainImg.addEventListener('load', computeLayout);
     last = performance.now();
     requestAnimationFrame(tick);
     // After a beat, tailor the hint to whether real tilt is arriving.

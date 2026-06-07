@@ -22,6 +22,7 @@
   const WATER_RGB      = '175, 215, 255';  // light blue
   const STREAK_ALPHA   = 0.5;    // per-streak opacity
   const LINE_WIDTH     = 2;      // streak width (px)
+  const CULL_MARGIN    = 60;     // px beyond the viewport before a droplet is retired
 
   // --- spout layout: PLACEHOLDER measured from the provided photo.
   // x,y are FRACTIONS [0..1] of the fountain image box; dir is emission angle in
@@ -93,7 +94,7 @@
     clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
-      PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH,
+      PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH, CULL_MARGIN,
     },
   };
 });
