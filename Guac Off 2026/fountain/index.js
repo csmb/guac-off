@@ -134,7 +134,7 @@ if ('serviceWorker' in navigator) {
       H.integrate(p, g.x, g.y, dt, C.DRAG);
       let gone = false;
       if (!draining && H.isSubmerged(p, surfDir, level)) {
-        if (fillFrac < 1) poolVol++;
+        if (poolVol < C.POOL_CAPACITY) poolVol++;   // gate on live volume — never overshoot
         gone = true;
       } else if (H.isDead(p, bounds)) {
         gone = true;
