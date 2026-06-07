@@ -34,6 +34,17 @@ eq('spawnVelocity rnd=0 angle = dir - spread/2', Math.atan2(svL.vy, svL.vx), -0.
 const svR = H.spawnVelocity(0, 0.4, 100, 1);   // rnd=1 -> angle = dir + spread/2 = +0.2
 eq('spawnVelocity rnd=1 angle = dir + spread/2', Math.atan2(svR.vy, svR.vx), 0.2, 1e-6);
 
+// --- integrate: semi-implicit Euler with per-second drag; records prev pos ---
+const p1 = { x: 0, y: 0, vx: 0, vy: 0, px: 0, py: 0, life: 4 };
+H.integrate(p1, 0, 1000, 0.1, 0);   // gy=1000, dt=0.1, no drag
+eq('integrate vy = g*dt', p1.vy, 100, 1e-9);
+eq('integrate y = vy*dt', p1.y, 10, 1e-9);
+eq('integrate life -= dt', p1.life, 3.9, 1e-9);
+eq('integrate px captured', p1.px, 0, 1e-9);
+const p2 = { x: 0, y: 0, vx: 100, vy: 0, px: 0, py: 0, life: 4 };
+H.integrate(p2, 0, 0, 0.1, 2);      // drag=2 -> vx *= (1 - 0.2) = 0.8
+eq('integrate drag slows vx', p2.vx, 80, 1e-9);
+
 // --- gravityPx: tiltToGravity scaled by GRAVITY_SCALE (1600) ---
 eq('gravityPx upright -> 1600 down', H.gravityPx(90, 0), { x: 0, y: 1600 });
 eq('gravityPx gamma=30 -> 1600 right', H.gravityPx(0, 30), { x: 1600, y: 0 });

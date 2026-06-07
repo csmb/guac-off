@@ -45,6 +45,21 @@
     };
   }
 
+  // Advance a droplet one tick (mutates and returns it). dt in seconds.
+  function integrate(p, gx, gy, dt, drag) {
+    p.vx += gx * dt;
+    p.vy += gy * dt;
+    const d = 1 - drag * dt;
+    p.vx *= d;
+    p.vy *= d;
+    p.px = p.x;
+    p.py = p.y;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.life -= dt;
+    return p;
+  }
+
   function spawnVelocity(dir, spread, speed, rnd) {
     const a = dir + (rnd - 0.5) * spread;
     return { vx: Math.cos(a) * speed, vy: Math.sin(a) * speed };
@@ -56,7 +71,7 @@
   }
 
   return {
-    clamp, tiltToGravity, gravityPx, spawnVelocity, SPOUTS,
+    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
       PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH,
