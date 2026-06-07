@@ -98,9 +98,9 @@
   // Projection value (along dir) of the pool surface. fillFrac 0 = empty (surface at
   // the deepest screen extent), 1 = full (surface past the shallowest extent).
   function surfaceLevel(dir, w, h, fillFrac) {
-    const p0 = 0 * dir.x + 0 * dir.y;
-    const p1 = w * dir.x + 0 * dir.y;
-    const p2 = 0 * dir.x + h * dir.y;
+    const p0 = 0;
+    const p1 = w * dir.x;
+    const p2 = h * dir.y;
     const p3 = w * dir.x + h * dir.y;
     const lo = Math.min(p0, p1, p2, p3);
     const hi = Math.max(p0, p1, p2, p3);

@@ -93,5 +93,13 @@ eq('gravityDir flat -> fallback down', H.gravityDir({ x: 0, y: 0 }), { x: 0, y: 
 eq('gravityDir 3-4-5', H.gravityDir({ x: 3, y: 4 }), { x: 0.6, y: 0.8 });
 eq('gravityDir left', H.gravityDir({ x: -1000, y: 0 }), { x: -1, y: 0 });
 
+// --- clipRectBelow: tilted direction (property checks; exact verts are float-messy) ---
+const tiltPoly = H.clipRectBelow(100, 200, { x: 0.6, y: 0.8 }, 110);
+eq('clipRectBelow tilted non-empty', tiltPoly.length >= 3, true);
+eq('clipRectBelow tilted verts in-bounds',
+   tiltPoly.every(function (v) { return v.x >= -1e-9 && v.x <= 100 + 1e-9 && v.y >= -1e-9 && v.y <= 200 + 1e-9; }), true);
+eq('clipRectBelow tilted verts all submerged',
+   tiltPoly.every(function (v) { return v.x * 0.6 + v.y * 0.8 >= 110 - 1e-9; }), true);
+
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
