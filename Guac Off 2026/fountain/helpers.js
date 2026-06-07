@@ -30,9 +30,9 @@
   const SPOUTS = [
     { x: 0.235, y: 0.640, dir: 1.83 },
     { x: 0.305, y: 0.625, dir: 1.62 },
-    { x: 0.500, y: 0.560, dir: 1.5708 },
+    { x: 0.500, y: 0.560, dir: Math.PI / 2 },
     { x: 0.620, y: 0.585, dir: 1.45 },
-    { x: 0.775, y: 0.650, dir: 1.5708 },
+    { x: 0.775, y: 0.650, dir: Math.PI / 2 },
   ];
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
@@ -56,6 +56,8 @@
   }
 
   // Advance a droplet one tick (mutates and returns it). dt in seconds.
+  // Semi-implicit Euler: gravity into velocity first, then drag (1 - drag*dt),
+  // then advance position. The order is intentional — don't swap it.
   function integrate(p, gx, gy, dt, drag) {
     p.vx += gx * dt;
     p.vy += gy * dt;
