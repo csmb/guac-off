@@ -45,6 +45,15 @@
     };
   }
 
+  // True when a droplet should be retired: expired, off-screen, or hit the pool.
+  function isDead(p, b) {
+    if (p.life <= 0) return true;
+    if (p.x < -b.margin || p.x > b.w + b.margin) return true;
+    if (p.y < -b.margin || p.y > b.h + b.margin) return true;
+    if (p.y >= b.poolY) return true;
+    return false;
+  }
+
   // Advance a droplet one tick (mutates and returns it). dt in seconds.
   function integrate(p, gx, gy, dt, drag) {
     p.vx += gx * dt;
@@ -71,7 +80,7 @@
   }
 
   return {
-    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, SPOUTS,
+    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
       PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH,

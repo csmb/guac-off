@@ -45,6 +45,15 @@ const p2 = { x: 0, y: 0, vx: 100, vy: 0, px: 0, py: 0, life: 4 };
 H.integrate(p2, 0, 0, 0.1, 2);      // drag=2 -> vx *= (1 - 0.2) = 0.8
 eq('integrate drag slows vx', p2.vx, 80, 1e-9);
 
+// --- isDead: bounds = { w, h, margin, poolY } ---
+const B = { w: 100, h: 200, margin: 40, poolY: 184 };
+eq('isDead alive in-bounds', H.isDead({ x: 50, y: 50, life: 1 }, B), false);
+eq('isDead off right', H.isDead({ x: 200, y: 50, life: 1 }, B), true);
+eq('isDead off left',  H.isDead({ x: -50, y: 50, life: 1 }, B), true);
+eq('isDead off top',   H.isDead({ x: 50, y: -50, life: 1 }, B), true);
+eq('isDead life expired', H.isDead({ x: 50, y: 50, life: 0 }, B), true);
+eq('isDead below pool', H.isDead({ x: 50, y: 190, life: 1 }, B), true);
+
 // --- gravityPx: tiltToGravity scaled by GRAVITY_SCALE (1600) ---
 eq('gravityPx upright -> 1600 down', H.gravityPx(90, 0), { x: 0, y: 1600 });
 eq('gravityPx gamma=30 -> 1600 right', H.gravityPx(0, 30), { x: 1600, y: 0 });
