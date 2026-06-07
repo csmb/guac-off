@@ -91,3 +91,20 @@ html, body {
   .glow { transition: none; }
   .reveal-burst, .reveal-headline, .reveal-payoff, .reveal-address, .escape { animation: none; opacity: 1; }
 }
+
+/* Reveal: distance + avocado stops */
+.reveal-distance { margin: 0; font-size: 1rem; opacity: 0.9; }
+.reveal-distance[hidden] { display: none; }
+.reveal-stops {
+  width: 100%; max-width: 20rem; margin: 0.2rem auto 0;
+}
+.reveal-stops[hidden] { display: none; }
+.stops-title { margin: 0 0 0.3rem; font-size: 0.95rem; font-weight: 700; color: #39ff14; }
+.stops-list { list-style: none; margin: 0; padding: 0; text-align: left; }
+.stops-row { margin: 0.18rem 0; font-size: 0.9rem; line-height: 1.3; }
+.stops-row a {
+  color: #f5e6c8; text-decoration: none;
+  border-bottom: 1px dotted rgba(245, 230, 200, 0.5);
+}
+.stops-msg { margin: 0.3rem 0 0; font-size: 0.85rem; opacity: 0.85; }
+.stops-msg[hidden] { display: none; }
