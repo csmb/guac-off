@@ -133,6 +133,8 @@ if ('serviceWorker' in navigator) {
       const p = pool[i];
       H.integrate(p, g.x, g.y, dt, C.DRAG);
       let gone = false;
+      // Absorb droplets that reach the surface (raising the pool). While draining we
+      // skip absorption so the level can fall — in-flight droplets pass through and run off.
       if (!draining && H.isSubmerged(p, surfDir, level)) {
         if (poolVol < C.POOL_CAPACITY) poolVol++;   // gate on live volume — never overshoot
         gone = true;
