@@ -2,7 +2,7 @@
 
 - **Date:** 2026-06-07
 - **Branch:** `waterfall` (off `main`)
-- **Status:** Approved design → writing implementation plan next
+- **Status:** Implemented on `waterfall` (helpers node-tested; engine ported faithfully). Visual fidelity vs the screenshots is the user's final check (serve + compare), pending at merge time.
 - **Source handoff:** `docs/design_handoff_waterfall/` (README + `waterfall.js` reference impl + screenshots + `fountain.png`). `waterfall.js` is the authoritative simulation reference; port it faithfully.
 
 ## Summary
