@@ -89,7 +89,7 @@ The stateful simulation (pools, spawn/update/render, listeners, loop) lives in `
 ## Assets & handoff housekeeping
 
 - Copy `fountain.png` (2034×1136) into `waterfall/assets/fountain.png` (the shipped plate).
-- Rename the handoff folder `docs/design_handoff_waterfall 2/` → `docs/design_handoff_waterfall/` (the `" 2"` is an iCloud conflicted-copy artifact per the known hazard) and keep it as committed design reference.
+- Rename the handoff folder `docs/design_handoff_waterfall 2/` → `docs/design_handoff_waterfall/` (the `" 2"` is an iCloud conflicted-copy artifact per the known hazard). Keep it **locally only** — git-ignored, NOT committed: it duplicates the shipped 2.3 MB plate, so committing it would bloat the repo. (History was rewritten to drop it before the first push.)
 
 ## Mobile
 
