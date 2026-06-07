@@ -45,13 +45,14 @@
     };
   }
 
-  // True when a droplet should be retired: expired, off-screen, or hit the pool.
-  function isDead(p, b) {
-    if (p.life <= 0) return true;
-    if (p.x < -b.margin || p.x > b.w + b.margin) return true;
-    if (p.y < -b.margin || p.y > b.h + b.margin) return true;
-    if (p.y >= b.poolY) return true;
-    return false;
+  function gravityPx(beta, gamma) {
+    const g = tiltToGravity(beta, gamma);
+    return { x: g.x * GRAVITY_SCALE, y: g.y * GRAVITY_SCALE };
+  }
+
+  function spawnVelocity(dir, spread, speed, rnd) {
+    const a = dir + (rnd - 0.5) * spread;
+    return { vx: Math.cos(a) * speed, vy: Math.sin(a) * speed };
   }
 
   // Advance a droplet one tick (mutates and returns it). dt in seconds.
@@ -69,18 +70,25 @@
     return p;
   }
 
-  function spawnVelocity(dir, spread, speed, rnd) {
-    const a = dir + (rnd - 0.5) * spread;
-    return { vx: Math.cos(a) * speed, vy: Math.sin(a) * speed };
+  // True when a droplet should be retired: expired, off-screen, or hit the pool.
+  function isDead(p, b) {
+    if (p.life <= 0) return true;
+    if (p.x < -b.margin || p.x > b.w + b.margin) return true;
+    if (p.y < -b.margin || p.y > b.h + b.margin) return true;
+    if (p.y >= b.poolY) return true;
+    return false;
   }
 
-  function gravityPx(beta, gamma) {
-    const g = tiltToGravity(beta, gamma);
-    return { x: g.x * GRAVITY_SCALE, y: g.y * GRAVITY_SCALE };
+  // Map a spout's fractional position to absolute screen px within the image box.
+  function spoutToScreen(spout, imgBox) {
+    return {
+      x: imgBox.left + spout.x * imgBox.width,
+      y: imgBox.top + spout.y * imgBox.height,
+    };
   }
 
   return {
-    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, SPOUTS,
+    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
       PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH,

@@ -54,6 +54,12 @@ eq('isDead off top',   H.isDead({ x: 50, y: -50, life: 1 }, B), true);
 eq('isDead life expired', H.isDead({ x: 50, y: 50, life: 0 }, B), true);
 eq('isDead below pool', H.isDead({ x: 50, y: 190, life: 1 }, B), true);
 
+// --- spoutToScreen: fraction within imgBox -> absolute px ---
+const IB = { left: 100, top: 50, width: 200, height: 400 };
+eq('spoutToScreen center', H.spoutToScreen({ x: 0.5, y: 0.5 }, IB), { x: 200, y: 250 });
+eq('spoutToScreen top-left', H.spoutToScreen({ x: 0, y: 0 }, IB), { x: 100, y: 50 });
+eq('spoutToScreen bottom-right', H.spoutToScreen({ x: 1, y: 1 }, IB), { x: 300, y: 450 });
+
 // --- gravityPx: tiltToGravity scaled by GRAVITY_SCALE (1600) ---
 eq('gravityPx upright -> 1600 down', H.gravityPx(90, 0), { x: 0, y: 1600 });
 eq('gravityPx gamma=30 -> 1600 right', H.gravityPx(0, 30), { x: 1600, y: 0 });
