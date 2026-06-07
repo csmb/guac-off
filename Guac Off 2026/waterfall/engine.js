@@ -16,8 +16,8 @@
     let CW = 0, CH = 0, S = 1; // S = canvas px per image px
     function resize() {
       const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, K.DPR_CAP);
-      const targetW = Math.min(rect.width * dpr, K.WIDTH_CAP);
+      const dpr = Math.min(window.devicePixelRatio || 1, CFG.dprCap || K.DPR_CAP);
+      const targetW = Math.min(rect.width * dpr, CFG.widthCap || K.WIDTH_CAP);
       S = targetW / K.IMG_W;
       CW = Math.round(K.IMG_W * S);
       CH = Math.round(K.IMG_H * S);
@@ -67,7 +67,7 @@
       const step = H.emitStep(s._acc || 0, rate);
       s._acc = step.acc;
       let n = step.n;
-      if (stream.length > K.MAX_STREAM) n = 0;
+      if (stream.length > (CFG.maxStream || K.MAX_STREAM)) n = 0;
       for (let i = 0; i < n; i++) {
         const off = rnd(-s.w / 2, s.w / 2);
         stream.push({
@@ -89,7 +89,7 @@
       const step = H.emitStep(s._acc || 0, rate);
       s._acc = step.acc;
       let n = step.n;
-      if (stream.length > K.MAX_STREAM) n = 0;
+      if (stream.length > (CFG.maxStream || K.MAX_STREAM)) n = 0;
       for (let i = 0; i < n; i++) {
         const ang = rnd(-0.22, 0.22);
         const sp = s.v0 * rnd(0.62, 1.05);
@@ -104,14 +104,14 @@
     }
 
     function spawnMist(x, y, scale) {
-      if (mist.length > K.MAX_MIST) return;
+      if (mist.length > (CFG.maxMist || K.MAX_MIST)) return;
       mist.push({ x, y, vx: rnd(-0.3, 0.3), vy: rnd(-0.5, -0.05), r: rnd(6, 22) * scale, life: 0, max: rnd(40, 95), a: rnd(0.05, 0.16) });
     }
 
     function doSplash(x, y, power) {
       const n = Math.round(rnd(4, 9) * CFG.splash * power);
       for (let i = 0; i < n; i++) {
-        if (splash.length > K.MAX_SPLASH) break;
+        if (splash.length > (CFG.maxSplash || K.MAX_SPLASH)) break;
         const ang = -Math.PI / 2 + rnd(-1.05, 1.05);
         const sp = rnd(1.6, 5.2) * (0.7 + power * 0.4);
         splash.push({ x, y, px: x, py: y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life: 0, max: rnd(16, 34), w: rnd(1.0, 2.2) });

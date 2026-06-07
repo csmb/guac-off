@@ -33,6 +33,20 @@ if ('serviceWorker' in navigator) {
   const config = Object.assign({}, defaults, overrides);
   config.tint = (defaults.tint || [232, 244, 255]).slice(); // own copy
 
+  // Mobile / touch devices: a much lighter load so it stays smooth (this is a
+  // desktop-first piece). Fewer particles, no mist, and a lower-res backing store —
+  // the geometry ribbons keep the columns looking solid regardless of particle count.
+  const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  if (coarse) {
+    config.flow *= 0.5;
+    config.splash *= 0.45;
+    config.mist = false;       // skip the expensive per-droplet mist gradients
+    config.dprCap = 1;         // 1x backing store — big fill-rate win on retina phones
+    config.widthCap = 900;     // cap canvas resolution
+    config.maxStream = 2200;   // bound worst-case draw calls
+    config.maxSplash = 900;
+  }
+
   const canvas = document.getElementById('water');
   const spouts = window.WaterfallSpouts;
 
