@@ -2,7 +2,7 @@
 
 - **Date:** 2026-06-07
 - **Branch:** `waterfall` (off `main`)
-- **Status:** Implemented on `waterfall` (helpers node-tested; engine ported faithfully). Visual fidelity vs the screenshots is the user's final check (serve + compare), pending at merge time.
+- **Status:** Implemented & merged to `main`. Helpers node-tested; engine ported faithfully; visual fidelity confirmed by the user — incl. an even-splash tuning pass (`MAX_SPLASH` 6000, splash crown floor 0.9, default `splash` 1.4, `speed` 0.6).
 - **Source handoff:** `docs/design_handoff_waterfall/` (README + `waterfall.js` reference impl + screenshots + `fountain.png`). `waterfall.js` is the authoritative simulation reference; port it faithfully.
 
 ## Summary
