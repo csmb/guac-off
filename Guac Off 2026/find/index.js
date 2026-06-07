@@ -3,7 +3,7 @@
 (function () {
   const H = window.FindHelpers;
   const { bearing, haversineMeters, isNearVenue, warmth,
-          pointingVector, bearingVector, angleBetween, rotateAboutUp, smoothVector,
+          pointingVector, bearingVector, angleBetween, aimFromCompass, smoothVector,
           shouldLock, dec } = H;
   const C = H.constants;
 
@@ -109,9 +109,11 @@
         huntHint.textContent = 'Wave your phone in a figure-8 to calibrate 🧭';
         return; // don't update aim while accuracy is unusable
       }
-      // iOS: anchor absolute (magnetic) north; webkitCompassHeading ~ 360 - alpha when flat.
-      vec = pointingVector(360 - e.webkitCompassHeading, e.beta ?? 0, e.gamma ?? 0);
-      vec = rotateAboutUp(vec, MAGNETIC_DECLINATION_DEG); // magnetic -> true north (azimuth only)
+      // webkitCompassHeading is a tilt-compensated, roll-stable magnetic heading: use it
+      // directly for azimuth (+declination -> true north) and derive only pitch from beta/gamma.
+      // (Feeding it as Euler alpha alongside the device's gamma swung the heading ~1:1 under
+      // wrist-roll near vertical — the cold<->found flicker.)
+      vec = aimFromCompass(e.webkitCompassHeading + MAGNETIC_DECLINATION_DEG, e.beta ?? 0, e.gamma ?? 0);
     } else if (e.absolute === true && typeof e.alpha === 'number') {
       vec = pointingVector(e.alpha, e.beta ?? 0, e.gamma ?? 0); // Android absolute ~ true north
     } else {

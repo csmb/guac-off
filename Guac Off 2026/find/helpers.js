@@ -112,6 +112,18 @@
     return { e: v.e * c + v.n * s, n: v.n * c - v.e * s, u: v.u };
   }
 
+  // Build an aim direction from an ABSOLUTE compass heading + the device's tilt.
+  // Azimuth comes straight from the (tilt-compensated, roll-stable) compass heading — so
+  // rolling the phone about its pointing axis no longer swings the heading. Deriving azimuth
+  // from Euler alpha+gamma instead caused a ~1:1 azimuth swing under wrist-roll near vertical
+  // (the "cold <-> found" flicker). Elevation (camera pitch) still comes from beta/gamma and
+  // matches pointingVector's up-component, so both heading sources produce comparable aims.
+  function aimFromCompass(headingDeg, betaDeg, gammaDeg) {
+    const elev = Math.asin(clamp(-Math.cos(toRad(betaDeg)) * Math.cos(toRad(gammaDeg)), -1, 1));
+    const a = toRad(headingDeg), ce = Math.cos(elev);
+    return { e: ce * Math.sin(a), n: ce * Math.cos(a), u: Math.sin(elev) };
+  }
+
   // Low-pass smoothing of a direction: lerp components, renormalize. Smoothing in
   // vector space sidesteps the 0/360 seam entirely (no need for angleState here).
   function smoothVector(state, v, factor) {
@@ -162,7 +174,7 @@
     bearing, haversineMeters, isNearVenue, clamp, toRad, toDeg,
     angleDiff, warmth,
     rotationMatrix, pointingAzimuth,
-    pointingVector, bearingVector, angleBetween, rotateAboutUp, smoothVector,
+    pointingVector, bearingVector, angleBetween, rotateAboutUp, aimFromCompass, smoothVector,
     angleState, smoothAngle,
     enc, dec, shouldLock,
     constants: { WARMTH_WINDOW_DEG, LOCK_DEG, LOCK_HOLD_MS, NEAR_VENUE_M, ESCAPE_DELAY_MS, SMOOTH_FACTOR },

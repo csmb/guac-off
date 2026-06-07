@@ -58,6 +58,19 @@ let sv = {e:1, n:0, u:0};
 for (let i = 0; i < 50; i++) sv = H.smoothVector(sv, {e:0, n:1, u:0}, 0.8);
 eq('smoothVector converges to north (n~1)', sv.n, 1, 0.01);
 
+// --- aimFromCompass: azimuth from a roll-stable compass heading, elevation from tilt ---
+// Regression for the cold<->found flicker: rolling the phone (gamma) at the vertical aim
+// pose must NOT change the aim. (The old path derived azimuth from Euler alpha+gamma, so a
+// wrist roll swung the heading ~1:1.)
+eq('aimFromCompass roll-invariant at vertical',
+   H.angleBetween(H.aimFromCompass(45, 90, 0), H.aimFromCompass(45, 90, 35)), 0, 1e-6);
+// Heading drives azimuth; a vertical hold is horizon-level and aims at the bearing.
+eq('aimFromCompass(0,90,0) aims north-level', H.angleBetween(H.aimFromCompass(0, 90, 0), H.bearingVector(0)), 0, 0.01);
+eq('aimFromCompass(90,90,0) aims east-level', H.angleBetween(H.aimFromCompass(90, 90, 0), H.bearingVector(90)), 0, 0.01);
+eq('aimFromCompass(0,90,0).u ~ 0 (level when vertical)', H.aimFromCompass(0, 90, 0).u, 0, 1e-6);
+// A flat phone (beta=0) aims its camera straight down -> 90deg off a horizon target.
+eq('aimFromCompass(0,0,0) vs horizon = 90 (camera down)', H.angleBetween(H.aimFromCompass(0, 0, 0), H.bearingVector(0)), 90, 0.01);
+
 // --- enc/dec round-trip (light obfuscation, not crypto) ---
 eq('dec(enc) round-trips', H.dec(H.enc('Dolores Park, SF')), 'Dolores Park, SF');
 eq('enc output is not plaintext', H.enc('Dolores Park, SF').includes('Dolores'), false);
