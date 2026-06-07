@@ -65,6 +65,12 @@ eq('gravityPx upright -> 1600 down', H.gravityPx(90, 0), { x: 0, y: 1600 });
 eq('gravityPx gamma=30 -> 1600 right', H.gravityPx(0, 30), { x: 1600, y: 0 });
 eq('gravityPx flat -> zero', H.gravityPx(0, 0), { x: 0, y: 0 });
 
+// --- surfaceLevel: projection value of the pool surface for a fill fraction ---
+eq('surfaceLevel empty', H.surfaceLevel({ x: 0, y: 1 }, 100, 200, 0), 200);
+eq('surfaceLevel full',  H.surfaceLevel({ x: 0, y: 1 }, 100, 200, 1), 0);
+eq('surfaceLevel half',  H.surfaceLevel({ x: 0, y: 1 }, 100, 200, 0.5), 100);
+eq('surfaceLevel tilted half', H.surfaceLevel({ x: 0.6, y: 0.8 }, 100, 200, 0.5), 110);
+
 // --- gravityDir: unit "down" vector from a gravity vector; flat -> screen-down ---
 eq('gravityDir down', H.gravityDir({ x: 0, y: 1600 }), { x: 0, y: 1 });
 eq('gravityDir flat -> fallback down', H.gravityDir({ x: 0, y: 0 }), { x: 0, y: 1 });

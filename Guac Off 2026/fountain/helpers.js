@@ -95,6 +95,18 @@
     };
   }
 
+  // Projection value (along dir) of the pool surface. fillFrac 0 = empty (surface at
+  // the deepest screen extent), 1 = full (surface past the shallowest extent).
+  function surfaceLevel(dir, w, h, fillFrac) {
+    const p0 = 0 * dir.x + 0 * dir.y;
+    const p1 = w * dir.x + 0 * dir.y;
+    const p2 = 0 * dir.x + h * dir.y;
+    const p3 = w * dir.x + h * dir.y;
+    const lo = Math.min(p0, p1, p2, p3);
+    const hi = Math.max(p0, p1, p2, p3);
+    return hi - fillFrac * (hi - lo);
+  }
+
   // Unit "down" vector from a gravity vector; falls back to screen-down when flat.
   function gravityDir(g) {
     const m = Math.hypot(g.x, g.y);
@@ -103,7 +115,7 @@
   }
 
   return {
-    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, gravityDir, SPOUTS,
+    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, gravityDir, surfaceLevel, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
       PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH, CULL_MARGIN,
