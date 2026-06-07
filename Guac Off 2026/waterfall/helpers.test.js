@@ -26,6 +26,8 @@ const sp = { x: 100, y: 0, splashY: 4, v0: 0, lean: 5, kind: 'fall' };
 eq('impactX no wind', H.impactX(sp, 2, 0, 0.018), 110, 1e-9);
 eq('impactX with wind', H.impactX(sp, 2, 10, 0.018), 110 + 0.5 * 10 * 0.018 * 4, 1e-9);
 eq('impactX jet returns x', H.impactX({ x: 77, kind: 'jet' }, 2, 0, 0.018), 77);
+// non-zero v0 exercises the full timeOfFlight path: tFall = 1 at v0=2, g=2, drop=3
+eq('impactX v0>0 + wind', H.impactX({ x: 50, y: 0, splashY: 3, v0: 2, lean: 1.5, kind: 'fall' }, 2, 4, 0.018), 51.536, 1e-9);
 
 // --- tintStr: rgba string, per-channel clamp to 255 ---
 eq('tintStr basic', H.tintStr([232, 244, 255], 0.5, 0), 'rgba(232,244,255,0.5)');
