@@ -62,6 +62,28 @@ if ('serviceWorker' in navigator) {
 
   const wf = window.createWaterfall({ canvas: canvas, config: config, spouts: spouts });
 
+  // --- rising-water flood: drive --flood-level on the details section over ~5s ---
+  // CSS turns --flood-level into the water height and the crisp reveal clip.
+  const details = document.getElementById('wf-details');
+  if (details) {
+    const FLOOD_MS = 5000;
+    const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const F = window.WaterfallFlood;
+    if (reduce || !F) {
+      details.style.setProperty('--flood-level', '1'); // accessible: reveal details immediately
+    } else {
+      let floodRaf = 0, startT = 0;
+      const floodFrame = function (now) {
+        if (!startT) startT = now;
+        const lvl = F.floodLevel(now - startT, FLOOD_MS);
+        details.style.setProperty('--flood-level', String(lvl));
+        if (lvl < 1) floodRaf = requestAnimationFrame(floodFrame);
+      };
+      floodRaf = requestAnimationFrame(floodFrame);
+      window.addEventListener('pagehide', function () { cancelAnimationFrame(floodRaf); });
+    }
+  }
+
   // hint pill: fade after 7s or on first click
   const hint = document.getElementById('hint');
   let hintGone = false;
