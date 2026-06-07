@@ -8,17 +8,64 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="stage">
+  <!-- top: the live waterfall, fixed -->
+  <div class="wf-stage">
     <div class="frame">
       <img class="plate" src="assets/fountain.png" alt="Vaillancourt Fountain">
       <canvas id="water"></canvas>
     </div>
+    <div id="hint" class="hint">click a stream to toggle it · move the cursor to push the spray</div>
   </div>
-  <div id="hint" class="hint">click a stream to toggle it · move the cursor to push the spray</div>
+
+  <!-- bottom: party details that flood into view -->
+  <section class="wf-details" id="wf-details">
+    <div class="wf-doc">
+      <h2 class="info-intro">The 15th Annual Guac Off</h2>
+      <p class="info-subtitle">Eat Guacamole with your friends and neighbors</p>
+
+      <dl class="info-essentials">
+        <dt>WHEN</dt>  <dd>Sept 12 · 1pm 'til the last chip</dd>
+        <dt>WHERE</dt> <dd>IYKYK</dd>
+        <dt>BRING</dt> <dd>Your finest guacamole! We'll provide the chips, the prizes, and the coveted Guacamole Glory Trophy</dd>
+        <dt>WIN</dt>   <dd>A Guacamole Glory Trophy</dd>
+        <dt>JUDGING</dt> <dd>Vote with your eyes, your heart, and of course, your taste buds</dd>
+        <dt>RULES</dt> <dd>No double dipping</dd>
+      </dl>
+
+      <section class="info-schedule">
+        <h3>THE AFTERNOON</h3>
+        <ol>
+          <li><span class="time">1:00 – 4:00</span><span class="what">Eat, Vote, Enjoy</span></li>
+          <li><span class="time">4:00 – 4:30</span><span class="what">Voting Concludes</span></li>
+          <li><span class="time">4:30 – 5:00</span><span class="what">Winners announced</span></li>
+        </ol>
+      </section>
+
+      <section class="info-awards">
+        <h3>WIN AWARDS</h3>
+        <ul class="chips">
+          <li>🏆 BEST GUACAMOLE 🏆</li>
+          <li>🍽 BEST PRESENTATION 🍽</li>
+          <li>🎙 BEST NAME 🎙</li>
+          <li>🥑 MOST AVOCADOS 🥑</li>
+          <li>👨‍🎤 MOST CREATIVE 👨‍🎤</li>
+          <li>🔥 SPICIEST GUACAMOLE 🔥</li>
+          <li>🙌 BEST YOUNG CHEF 🙌</li>
+          <li>🏋️‍♀️ HEAVIEST BOWL 🏋️‍♀️</li>
+        </ul>
+      </section>
+
+      <footer id="info-footer">No double dipping · Since 2012</footer>
+      <p class="wf-back"><a href="../index.html">↩ back to the party</a></p>
+    </div>
+
+    <div class="wf-flood" aria-hidden="true"></div>
+  </section>
 
   <script src="helpers.js"></script>
   <script src="spouts.js"></script>
   <script src="engine.js"></script>
+  <script src="flood.js"></script>
   <script src="index.js"></script>
 </body>
 </html>
