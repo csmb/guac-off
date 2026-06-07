@@ -18,7 +18,6 @@
   const PARTICLE_LIFE  = 5.0;    // seconds (safety cap; most exit sooner)
   const DRAG           = 0.12;   // per-second velocity damping
   const MAX_PARTICLES  = 800;    // hard cap on live droplets
-  const POOL_FRAC      = 0.92;   // pool line at this fraction of viewport height
   const WATER_RGB      = '175, 215, 255';  // light blue
   const STREAK_ALPHA   = 0.5;    // per-streak opacity
   const LINE_WIDTH     = 2;      // streak width (px)
@@ -145,7 +144,7 @@
     clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, gravityDir, surfaceLevel, isSubmerged, clipRectBelow, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
-      PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH, CULL_MARGIN,
+      PARTICLE_LIFE, DRAG, MAX_PARTICLES, WATER_RGB, STREAK_ALPHA, LINE_WIDTH, CULL_MARGIN,
       POOL_CAPACITY, POOL_ALPHA, DRAIN_TIME, SURFACE_SMOOTH, GRAVITY_EPS,
     },
   };
