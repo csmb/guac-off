@@ -23,8 +23,9 @@ device-orientation machinery.
 2. Tap → native iOS motion-permission prompt (when applicable) → water begins.
 3. Water streams from ~5 spouts. Tilting the phone redirects the flow in real time.
    Droplets fall off-screen or splash into a faint pool at the bottom.
-4. Desktop fallback: if no orientation events arrive within 1s, show "Best on a
-   phone" (mirrors `tilt/`).
+4. Desktop / no-motion fallback: the water keeps pouring straight down (gravity
+   defaults to "down"), and after ~1s a hint toast notes motion is off. Unlike
+   `tilt/`, the toy stays usable without a device.
 
 ## Non-goals (v1)
 
@@ -113,7 +114,7 @@ streak rendering).
 ### Gravity from tilt
 
 `gravityPx(beta, gamma)` = `tiltToGravity(beta, gamma)` scaled by `GRAVITY_SCALE`
-into px/s². Using `tilt/`'s mapping (`TILT_FULL_DEG = 30`, `STRENGTH = 1.2`):
+into px/s². Mapping constants (`TILT_FULL_DEG = 30`, `STRENGTH = 1.0`, `GRAVITY_SCALE = 1600`):
 
 - Held upright (the natural viewing pose, `beta ≈ 90`) → gravity points **down**
   → water falls. Correct default with no conscious tilting.
