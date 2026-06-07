@@ -1,0 +1,37 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: #000;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}
+
+/* black radial stage, fountain frame centered + letterboxed to the photo aspect */
+.stage {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(120% 120% at 50% 30%, #07090c 0%, #000 70%);
+}
+.frame {
+  position: relative;
+  width: min(100vw, calc(100vh * 2034 / 1136));
+  aspect-ratio: 2034 / 1136;
+}
+
+/* photo plate (no pointer events) + transparent water canvas on top (gets the clicks) */
+.plate, #water { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.plate { object-fit: contain; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+
+/* hint pill (design tokens from the handoff) */
+.hint {
+  position: fixed; left: 50%; bottom: 5vh; transform: translateX(-50%);
+  background: rgba(8, 12, 16, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgba(220, 232, 245, 0.55);
+  font-size: 13px; padding: 8px 16px;
+  border-radius: 999px;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  pointer-events: none;
+  transition: opacity 800ms ease;
+}
+.hint.hide { opacity: 0; }
