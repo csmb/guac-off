@@ -2,7 +2,7 @@
 
 - **Date:** 2026-06-06
 - **Branch:** `vaillancourt_fountain` (off `main`)
-- **Status:** Approved design → writing implementation plan next
+- **Status:** Implemented (v1) on `vaillancourt_fountain`. NOT yet device-tested — tilt-direction sign and dial tuning deferred to prod verification. Pending final art swap (real cutout + measured spouts).
 - **Project:** Guac Off 2026 (`Guac Off 2026/`)
 
 ## Summary

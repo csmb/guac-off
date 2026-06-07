@@ -67,6 +67,10 @@ if ('serviceWorker' in navigator) {
   let smoothBeta = 90, smoothGamma = 0, tiltActive = false;
   function onOrientation(e) {
     tiltActive = true;
+    // gamma = left/right roll, beta = front/back pitch. The mapping is verified by
+    // math but NOT yet on a device: tilt-left should pour water left. If it reads
+    // mirrored in prod, negate the offending axis here, e.g.:
+    //   const gamma = -(e.gamma || 0);   // flip if left/right is reversed
     const beta = e.beta || 0;
     const gamma = e.gamma || 0;
     smoothBeta = smoothBeta * 0.85 + beta * 0.15;
