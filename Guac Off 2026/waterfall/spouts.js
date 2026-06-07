@@ -16,6 +16,6 @@ window.WaterfallSpouts = [
   { id: 'R',  kind: 'fall', x: 1500, y: 694, w: 34, v0: 4.8, lean:  0.08, splashY: 816, on: true },
 ];
 window.WaterfallConfigDefaults = {
-  flow: 1.0, spray: 1.0, splash: 1.0, wind: 0.0, speed: 1.0,
+  flow: 1.0, spray: 1.0, splash: 1.4, wind: 0.0, speed: 0.6,
   ripples: true, mist: true, tint: [232, 244, 255],
 };
