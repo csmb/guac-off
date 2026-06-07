@@ -105,5 +105,43 @@ eq('warmth 40 -> 0.5', H.warmth(40), 0.5, 0.001);
 // glow is visible well before the 5deg lock: a 20deg-off aim still reads "warm".
 eq('warmth 20 -> 0.75 (green visible, but wont lock)', H.warmth(20), 0.75, 0.001);
 
+// --- distance + corridor geometry (avocado stops) ---
+eq('metersToMiles(1609.344) -> 1', H.metersToMiles(1609.344), 1, 1e-6);
+eq('metersToMiles(0) -> 0', H.metersToMiles(0), 0, 1e-9);
+
+// bboxAround: pad=0 is just the min/max of the two points
+const bb0 = H.bboxAround({lat:0,lng:0}, {lat:0,lng:1}, 0);
+eq('bboxAround pad0 south', bb0.south, 0, 1e-9);
+eq('bboxAround pad0 north', bb0.north, 0, 1e-9);
+eq('bboxAround pad0 west',  bb0.west,  0, 1e-9);
+eq('bboxAround pad0 east',  bb0.east,  1, 1e-9);
+// ~111195 m of padding ≈ 1° of latitude
+const bbP = H.bboxAround({lat:0,lng:0}, {lat:0,lng:1}, 111195);
+eq('bboxAround pad ~1deg south', bbP.south, -1, 0.01);
+eq('bboxAround pad ~1deg north', bbP.north,  1, 0.01);
+
+// pointToSegment: segment due east along the equator, length ~111195 m
+const A = {lat:0,lng:0}, B = {lat:0,lng:1};
+const onLine = H.pointToSegment({lat:0,lng:0.5}, A, B);
+eq('pointToSegment on-line distM ~0', onLine.distM, 0, 1);
+eq('pointToSegment on-line t ~0.5', onLine.t, 0.5, 1e-6);
+const offLine = H.pointToSegment({lat:0.001,lng:0.5}, A, B); // ~111 m north of midpoint
+eq('pointToSegment offset distM ~111m', offLine.distM, 111, 5);
+eq('pointToSegment offset t ~0.5', offLine.t, 0.5, 1e-4);
+const past = H.pointToSegment({lat:0,lng:1.5}, A, B);
+eq('pointToSegment past-end t>1', past.t > 1, true);
+
+// corridorFilter: keep within buffer AND between endpoints, sorted you->venue
+const stores = [
+  {name:'on',   lat:0,     lng:0.5},   // on the line, t=0.5
+  {name:'near', lat:0.005, lng:0.25},  // ~556 m off, t=0.25
+  {name:'far',  lat:0.05,  lng:0.5},   // ~5560 m off -> dropped
+  {name:'past', lat:0,     lng:1.5},   // t>1 -> dropped
+];
+const kept = H.corridorFilter(stores, A, B, 1000);
+eq('corridorFilter keeps 2', kept.length, 2);
+eq('corridorFilter sorted near-then-on', kept.map(s=>s.name).join(','), 'near,on');
+eq('corridorFilter annotates distM', kept[0].distM > 0, true);
+
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

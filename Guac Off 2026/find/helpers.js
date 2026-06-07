@@ -166,12 +166,58 @@
   function enc(str) { return b64encode(xor(str)); }
   function dec(b64) { return xor(b64decode(b64)); }
 
+  function metersToMiles(m) { return m / 1609.344; }
+
+  // Bounding box covering both points, expanded by padMeters. {south,west,north,east}.
+  function bboxAround(from, to, padMeters) {
+    const refLat = (from.lat + to.lat) / 2;
+    const dLat = toDeg(padMeters / R_EARTH_M);
+    const dLng = toDeg(padMeters / (R_EARTH_M * Math.cos(toRad(refLat)) || R_EARTH_M));
+    return {
+      south: Math.min(from.lat, to.lat) - dLat,
+      north: Math.max(from.lat, to.lat) + dLat,
+      west:  Math.min(from.lng, to.lng) - dLng,
+      east:  Math.max(from.lng, to.lng) + dLng,
+    };
+  }
+
+  // Local equirectangular projection: meters east/north of `origin`. Accurate at city scale.
+  function _projectMeters(p, origin) {
+    return {
+      x: toRad(p.lng - origin.lng) * Math.cos(toRad(origin.lat)) * R_EARTH_M,
+      y: toRad(p.lat - origin.lat) * R_EARTH_M,
+    };
+  }
+
+  // Perpendicular distance (m) from p to segment a-b, plus progress t along a->b (0..1 = between).
+  function pointToSegment(p, a, b) {
+    const Bp = _projectMeters(b, a); // a is the local origin (0,0)
+    const Pp = _projectMeters(p, a);
+    const len2 = Bp.x * Bp.x + Bp.y * Bp.y;
+    if (len2 === 0) return { distM: Math.hypot(Pp.x, Pp.y), t: 0 };
+    const t = (Pp.x * Bp.x + Pp.y * Bp.y) / len2;
+    const ct = clamp(t, 0, 1);
+    return { distM: Math.hypot(Pp.x - ct * Bp.x, Pp.y - ct * Bp.y), t: t };
+  }
+
+  // Keep stores within bufferMeters of the from->to line AND between the endpoints; sort from->to.
+  function corridorFilter(stores, from, to, bufferMeters) {
+    return stores
+      .map(function (s) {
+        const seg = pointToSegment({ lat: s.lat, lng: s.lng }, from, to);
+        return Object.assign({}, s, { distM: seg.distM, t: seg.t });
+      })
+      .filter(function (s) { return s.distM <= bufferMeters && s.t >= 0 && s.t <= 1; })
+      .sort(function (x, y) { return x.t - y.t; });
+  }
+
   function shouldLock(diff, heldMs) {
     return diff < LOCK_DEG && heldMs >= LOCK_HOLD_MS;
   }
 
   return {
     bearing, haversineMeters, isNearVenue, clamp, toRad, toDeg,
+    metersToMiles, bboxAround, pointToSegment, corridorFilter,
     angleDiff, warmth,
     rotationMatrix, pointingAzimuth,
     pointingVector, bearingVector, angleBetween, rotateAboutUp, aimFromCompass, smoothVector,
