@@ -107,6 +107,11 @@
     return hi - fillFrac * (hi - lo);
   }
 
+  // True when a point lies below the pool surface (deeper along dir than level).
+  function isSubmerged(p, dir, level) {
+    return p.x * dir.x + p.y * dir.y >= level;
+  }
+
   // Unit "down" vector from a gravity vector; falls back to screen-down when flat.
   function gravityDir(g) {
     const m = Math.hypot(g.x, g.y);
@@ -115,7 +120,7 @@
   }
 
   return {
-    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, gravityDir, surfaceLevel, SPOUTS,
+    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, gravityDir, surfaceLevel, isSubmerged, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
       PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH, CULL_MARGIN,

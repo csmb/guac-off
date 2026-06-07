@@ -65,6 +65,13 @@ eq('gravityPx upright -> 1600 down', H.gravityPx(90, 0), { x: 0, y: 1600 });
 eq('gravityPx gamma=30 -> 1600 right', H.gravityPx(0, 30), { x: 1600, y: 0 });
 eq('gravityPx flat -> zero', H.gravityPx(0, 0), { x: 0, y: 0 });
 
+// --- isSubmerged: point is below the surface (projection along dir >= level) ---
+eq('isSubmerged below horiz', H.isSubmerged({ x: 50, y: 150 }, { x: 0, y: 1 }, 100), true);
+eq('isSubmerged above horiz', H.isSubmerged({ x: 50, y: 50 }, { x: 0, y: 1 }, 100), false);
+eq('isSubmerged at surface (>=)', H.isSubmerged({ x: 50, y: 100 }, { x: 0, y: 1 }, 100), true);
+eq('isSubmerged tilted in',  H.isSubmerged({ x: 10, y: 10 }, { x: 0.6, y: 0.8 }, 10), true);
+eq('isSubmerged tilted out', H.isSubmerged({ x: 10, y: 10 }, { x: 0.6, y: 0.8 }, 20), false);
+
 // --- surfaceLevel: projection value of the pool surface for a fill fraction ---
 eq('surfaceLevel empty', H.surfaceLevel({ x: 0, y: 1 }, 100, 200, 0), 200);
 eq('surfaceLevel full',  H.surfaceLevel({ x: 0, y: 1 }, 100, 200, 1), 0);
