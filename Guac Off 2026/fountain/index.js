@@ -27,6 +27,7 @@ if ('serviceWorker' in navigator) {
   // --- Layout (recomputed on start + resize) ---
   let DPR = 1, VW = 0, VH = 0, poolY = 0;
   let imgBox = { left: 0, top: 0, width: 0, height: 0 };
+  let poolGrad = null;   // pool shimmer gradient, rebuilt on layout change
 
   function computeLayout() {
     DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -40,6 +41,9 @@ if ('serviceWorker' in navigator) {
     const r = fountainImg.getBoundingClientRect();
     imgBox = { left: r.left, top: r.top, width: r.width, height: r.height };
     poolY = VH * C.POOL_FRAC;
+    poolGrad = ctx.createLinearGradient(0, poolY, 0, VH);
+    poolGrad.addColorStop(0, 'rgba(' + C.WATER_RGB + ', 0.04)');
+    poolGrad.addColorStop(1, 'rgba(' + C.WATER_RGB + ', 0.12)');
   }
 
   // --- Particle pool (fixed size, recycled via a free-index stack) ---
@@ -112,8 +116,12 @@ if ('serviceWorker' in navigator) {
       }
     }
 
-    // Draw streaks (one batched path)
+    // Faint pool shimmer at the bottom
     ctx.clearRect(0, 0, VW, VH);
+    ctx.fillStyle = poolGrad;
+    ctx.fillRect(0, poolY, VW, VH - poolY);
+
+    // Draw streaks (one batched path)
     ctx.strokeStyle = STROKE_STYLE;
     ctx.lineWidth = C.LINE_WIDTH;
     ctx.lineCap = 'round';
