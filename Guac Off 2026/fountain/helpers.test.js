@@ -23,6 +23,17 @@ eq('tilt gamma=30 -> full right',    H.tiltToGravity(0, 30), { x: 1, y: 0 });
 eq('tilt gamma=-90 -> full left (clamped)', H.tiltToGravity(0, -90), { x: -1, y: 0 });
 eq('tilt beta=15 -> half down',      H.tiltToGravity(15, 0), { x: 0, y: 0.5 });
 
+// --- spawnVelocity: angle = dir + (rnd-0.5)*spread; magnitude == speed ---
+const sv0 = H.spawnVelocity(Math.PI / 2, 0.4, 100, 0.5); // rnd=0.5 -> no jitter, straight down
+eq('spawnVelocity rnd=0.5 vx ~ 0', sv0.vx, 0, 1e-6);
+eq('spawnVelocity rnd=0.5 vy ~ 100', sv0.vy, 100, 1e-6);
+const sv1 = H.spawnVelocity(1.0, 0.6, 250, 0.2);
+eq('spawnVelocity preserves speed', Math.hypot(sv1.vx, sv1.vy), 250, 1e-6);
+const svL = H.spawnVelocity(0, 0.4, 100, 0);   // rnd=0 -> angle = dir - spread/2 = -0.2
+eq('spawnVelocity rnd=0 angle = dir - spread/2', Math.atan2(svL.vy, svL.vx), -0.2, 1e-6);
+const svR = H.spawnVelocity(0, 0.4, 100, 1);   // rnd=1 -> angle = dir + spread/2 = +0.2
+eq('spawnVelocity rnd=1 angle = dir + spread/2', Math.atan2(svR.vy, svR.vx), 0.2, 1e-6);
+
 // --- gravityPx: tiltToGravity scaled by GRAVITY_SCALE (1600) ---
 eq('gravityPx upright -> 1600 down', H.gravityPx(90, 0), { x: 0, y: 1600 });
 eq('gravityPx gamma=30 -> 1600 right', H.gravityPx(0, 30), { x: 1600, y: 0 });

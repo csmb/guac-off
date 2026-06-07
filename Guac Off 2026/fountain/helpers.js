@@ -45,13 +45,18 @@
     };
   }
 
+  function spawnVelocity(dir, spread, speed, rnd) {
+    const a = dir + (rnd - 0.5) * spread;
+    return { vx: Math.cos(a) * speed, vy: Math.sin(a) * speed };
+  }
+
   function gravityPx(beta, gamma) {
     const g = tiltToGravity(beta, gamma);
     return { x: g.x * GRAVITY_SCALE, y: g.y * GRAVITY_SCALE };
   }
 
   return {
-    clamp, tiltToGravity, gravityPx, SPOUTS,
+    clamp, tiltToGravity, gravityPx, spawnVelocity, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
       PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH,
