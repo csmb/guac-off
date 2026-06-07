@@ -9,8 +9,8 @@
   'use strict';
 
   // --- tunable constants (single source of truth) ---
-  const WARMTH_WINDOW_DEG = 18;   // diff at which warmth hits 0 (tight = small hot-spot to hunt for)
-  const LOCK_DEG = 5;             // within this many degrees counts as aligned (tight = precise aim)
+  const WARMTH_WINDOW_DEG = 80;   // diff at which the green glow/tone fades to 0 — wide so "warmer" guides you in from afar
+  const LOCK_DEG = 5;             // within this many degrees counts as aligned (tight = precise aim; independent of the glow range)
   const LOCK_HOLD_MS = 500;       // must hold alignment this long to lock
   const NEAR_VENUE_M = 120;       // within this distance, skip the hunt
   const ESCAPE_DELAY_MS = 12000;  // hidden escape hatch fades in after this

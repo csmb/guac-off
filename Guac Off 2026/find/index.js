@@ -139,9 +139,13 @@
       const diff = angleBetween(aim, targetVec);
       const w = warmth(diff);
       glow.style.setProperty('--warmth', w.toFixed(3));
-      huntHint.textContent = w > 0.8 ? "🔥 SO close — hold it steady!"
-        : w > 0.4 ? "Warmer — aim right at it 🔥"
-        : "Aim your phone around to find the party ❄️";
+      // "hold it steady" is tied to the actual lock cone, not just warmth — the glow
+      // now ramps up from much farther out than the 5° lock.
+      huntHint.textContent =
+          diff < C.LOCK_DEG ? "🔥 RIGHT THERE — hold it steady!"
+        : w > 0.66 ? "🔥 Almost — keep aiming…"
+        : w > 0.33 ? "Getting warmer… 🔥"
+        : "❄️ Cold — sweep around to find the party";
       updateTone(w); tickHaptic(w);
       if (diff < C.LOCK_DEG) {
         if (!lockStart) lockStart = performance.now();

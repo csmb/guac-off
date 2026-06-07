@@ -84,11 +84,13 @@ eq('angleDiff 10,350 -> 20', H.angleDiff(10, 350), 20, 0.001);
 eq('angleDiff 12,0 -> 12', H.angleDiff(12, 0), 12, 0.001);
 eq('angleDiff 0,180 -> 180', H.angleDiff(0, 180), 180, 0.001);
 
-// --- warmth: 1 at aligned, 0 by WARMTH_WINDOW_DEG (18) ---
+// --- warmth: 1 at aligned, 0 by WARMTH_WINDOW_DEG (80) — wide guiding range ---
 eq('warmth 0 -> 1', H.warmth(0), 1, 0.001);
-eq('warmth 18 -> 0 (window edge)', H.warmth(18), 0, 0.001);
-eq('warmth 90 -> 0 (clamped)', H.warmth(90), 0, 0.001);
-eq('warmth 9 -> 0.5', H.warmth(9), 0.5, 0.001);
+eq('warmth 80 -> 0 (window edge)', H.warmth(80), 0, 0.001);
+eq('warmth 120 -> 0 (clamped)', H.warmth(120), 0, 0.001);
+eq('warmth 40 -> 0.5', H.warmth(40), 0.5, 0.001);
+// glow is visible well before the 5deg lock: a 20deg-off aim still reads "warm".
+eq('warmth 20 -> 0.75 (green visible, but wont lock)', H.warmth(20), 0.75, 0.001);
 
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
