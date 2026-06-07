@@ -142,7 +142,7 @@
         if (!p.sp.behind && CFG.mist && p.vy > 4 && Math.random() < 0.006 * CFG.spray * dt) spawnMist(p.x, p.y, 0.4);
         const landed = p.y >= p.splashY && p.vy > 0;
         if (landed) {
-          if (!p.sp.behind) doSplash(p.x, p.splashY, Math.min(1.6, 0.4 + p.vy * 0.08));
+          if (!p.sp.behind) doSplash(p.x, p.splashY, Math.min(1.6, 0.9 + p.vy * 0.08));
           continue;
         }
         if (p.y > K.IMG_H + 30 || p.x < -60 || p.x > K.IMG_W + 60) continue;
