@@ -27,7 +27,7 @@
   const hunt = $('hunt'), huntHint = $('hunt-hint');
   const reveal = $('reveal'), revealAddress = $('reveal-address'), mapsLink = $('maps-link'), playAgain = $('play-again');
   const revealDistance = $('reveal-distance'), revealStops = $('reveal-stops');
-  const stopsList = $('stops-list'), stopsMsg = $('stops-msg');
+  const stopsList = $('stops-list'), stopsMsg = $('stops-msg'), stopsTitle = $('stops-title');
   const escape = $('escape');
 
   function show(el) { el.hidden = false; el.setAttribute('aria-hidden', 'false'); }
@@ -106,19 +106,25 @@
     renderStops(meters);
   }
 
+  let stopsGen = 0; // bumped on each render / play-again so a stale fetch can't repopulate the list
   function renderStops(meters) {
+    const gen = ++stopsGen;
     show(revealStops);
+    hide(stopsTitle);
     stopsList.innerHTML = '';
     if (metersToMiles(meters) > 75) {
       stopsMsg.textContent = "You're a road trip away — avocado stops show once you're closer 🥑";
       show(stopsMsg);
       return;
     }
+    show(stopsTitle);
     stopsMsg.textContent = 'Finding avocado stops… 🥑';
     show(stopsMsg);
     FindStores.findAvocadoStops(currentPos, venue).then(function (stops) {
+      if (gen !== stopsGen) return; // a newer render (or play-again) superseded this fetch
       stopsList.innerHTML = '';
       if (!stops.length) {
+        hide(stopsTitle);
         stopsMsg.textContent = 'No avocado stops mapped on the way — BYO 🥑';
         show(stopsMsg);
         return;
@@ -134,6 +140,7 @@
         stopsList.appendChild(li);
       });
     }).catch(function () {
+      if (gen !== stopsGen) return; // superseded — don't write into a reset/newer reveal
       stopsList.innerHTML = '';
       stopsMsg.textContent = 'Couldn’t load avocado stops — ';
       const retry = document.createElement('button');
@@ -275,7 +282,9 @@
   playAgain.addEventListener('click', function () {
     try { localStorage.removeItem(STORE_KEY); } catch (e) {}
     aim = null; targetVec = null; gotOrientation = false; gotAbsolute = false; lockStart = 0;
-    hide(revealDistance); hide(revealStops); hide(stopsMsg); stopsList.innerHTML = '';
+    stopsGen++; // invalidate any in-flight stops fetch from the previous reveal
+    hide(revealDistance); hide(revealStops); hide(stopsTitle); hide(stopsMsg);
+    stopsList.innerHTML = ''; stopsMsg.innerHTML = '';
     hide(reveal); show(cover);
   });
 
