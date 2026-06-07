@@ -23,6 +23,11 @@
   const STREAK_ALPHA   = 0.5;    // per-streak opacity
   const LINE_WIDTH     = 2;      // streak width (px)
   const CULL_MARGIN    = 60;     // px beyond the viewport before a droplet is retired
+  const POOL_CAPACITY  = 5000;   // absorbed droplets to fill the screen (tune for feel)
+  const POOL_ALPHA     = 0.5;    // pool body opacity (deep end of the gradient)
+  const DRAIN_TIME     = 0.8;    // seconds to fully drain on tap
+  const SURFACE_SMOOTH = 0.06;   // per-frame easing of the surface normal (slosh lag)
+  const GRAVITY_EPS    = 1e-3;   // |g| below this = treat the phone as flat
 
   // --- spout layout: PLACEHOLDER measured from the provided photo.
   // x,y are FRACTIONS [0..1] of the fountain image box; dir is emission angle in
@@ -90,11 +95,19 @@
     };
   }
 
+  // Unit "down" vector from a gravity vector; falls back to screen-down when flat.
+  function gravityDir(g) {
+    const m = Math.hypot(g.x, g.y);
+    if (m < GRAVITY_EPS) return { x: 0, y: 1 };
+    return { x: g.x / m, y: g.y / m };
+  }
+
   return {
-    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, SPOUTS,
+    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, gravityDir, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
       PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH, CULL_MARGIN,
+      POOL_CAPACITY, POOL_ALPHA, DRAIN_TIME, SURFACE_SMOOTH, GRAVITY_EPS,
     },
   };
 });

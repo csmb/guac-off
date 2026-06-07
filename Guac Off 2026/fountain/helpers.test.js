@@ -65,5 +65,11 @@ eq('gravityPx upright -> 1600 down', H.gravityPx(90, 0), { x: 0, y: 1600 });
 eq('gravityPx gamma=30 -> 1600 right', H.gravityPx(0, 30), { x: 1600, y: 0 });
 eq('gravityPx flat -> zero', H.gravityPx(0, 0), { x: 0, y: 0 });
 
+// --- gravityDir: unit "down" vector from a gravity vector; flat -> screen-down ---
+eq('gravityDir down', H.gravityDir({ x: 0, y: 1600 }), { x: 0, y: 1 });
+eq('gravityDir flat -> fallback down', H.gravityDir({ x: 0, y: 0 }), { x: 0, y: 1 });
+eq('gravityDir 3-4-5', H.gravityDir({ x: 3, y: 4 }), { x: 0.6, y: 0.8 });
+eq('gravityDir left', H.gravityDir({ x: -1000, y: 0 }), { x: -1, y: 0 });
+
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
