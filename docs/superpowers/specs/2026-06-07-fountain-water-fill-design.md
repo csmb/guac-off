@@ -2,7 +2,7 @@
 
 - **Date:** 2026-06-07
 - **Branch:** `fountain-water-fill` (off `main`)
-- **Status:** Approved design → writing implementation plan next
+- **Status:** Implemented on `fountain-water-fill` (helpers node-tested; slosh/drain/tilt feel verified in prod, per the v1 stance).
 - **Builds on:** the shipped `/fountain/` v1 (`Guac Off 2026/fountain/`)
 
 ## Summary
