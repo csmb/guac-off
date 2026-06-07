@@ -2,10 +2,11 @@
 
 (function () {
   const H = window.FindHelpers;
-  const { bearing, haversineMeters, isNearVenue, warmth,
+  const { bearing, haversineMeters, isNearVenue, warmth, metersToMiles,
           pointingVector, bearingVector, angleBetween, aimFromCompass, smoothVector,
           shouldLock, dec } = H;
   const C = H.constants;
+  const FindStores = window.FindStores;
 
   // ===== EDIT THIS ONE BLOCK (real venue) =====
   // Generate replacements (run in a terminal — do NOT paste the plaintext lat/lng or
@@ -25,6 +26,8 @@
   const cover = $('cover'), prime = $('prime'), status = $('status'), statusText = $('status-text');
   const hunt = $('hunt'), huntHint = $('hunt-hint');
   const reveal = $('reveal'), revealAddress = $('reveal-address'), mapsLink = $('maps-link'), playAgain = $('play-again');
+  const revealDistance = $('reveal-distance'), revealStops = $('reveal-stops');
+  const stopsList = $('stops-list'), stopsMsg = $('stops-msg');
   const escape = $('escape');
 
   function show(el) { el.hidden = false; el.setAttribute('aria-hidden', 'false'); }
@@ -88,8 +91,59 @@
     hide(cover); hide(prime); hide(status); hide(hunt); hide(escape);
     show(reveal);
     reveal.focus();
+    renderExtras();
     if (persist) { try { localStorage.setItem(STORE_KEY, '1'); } catch (e) {} playChime(); }
     if (persist) show(playAgain);
+  }
+
+  // Distance + "avocado stops on the way" — both need our location, so skip them when we
+  // revealed without GPS (escape hatch before locating, or already-found on reload).
+  function renderExtras() {
+    if (!currentPos) { hide(revealDistance); hide(revealStops); return; }
+    const meters = haversineMeters(currentPos, venue);
+    revealDistance.textContent = "You're " + metersToMiles(meters).toFixed(1) + ' mi from the party';
+    show(revealDistance);
+    renderStops(meters);
+  }
+
+  function renderStops(meters) {
+    show(revealStops);
+    stopsList.innerHTML = '';
+    if (metersToMiles(meters) > 75) {
+      stopsMsg.textContent = "You're a road trip away — avocado stops show once you're closer 🥑";
+      show(stopsMsg);
+      return;
+    }
+    stopsMsg.textContent = 'Finding avocado stops… 🥑';
+    show(stopsMsg);
+    FindStores.findAvocadoStops(currentPos, venue).then(function (stops) {
+      stopsList.innerHTML = '';
+      if (!stops.length) {
+        stopsMsg.textContent = 'No avocado stops mapped on the way — BYO 🥑';
+        show(stopsMsg);
+        return;
+      }
+      hide(stopsMsg);
+      stops.forEach(function (s) {
+        const li = document.createElement('li');
+        li.className = 'stops-row';
+        const a = document.createElement('a');
+        a.href = s.mapsUrl; a.target = '_blank'; a.rel = 'noopener';
+        a.textContent = s.name + ' · ' + s.miFromUser.toFixed(1) + ' mi ↗';
+        li.appendChild(a);
+        stopsList.appendChild(li);
+      });
+    }).catch(function () {
+      stopsList.innerHTML = '';
+      stopsMsg.textContent = 'Couldn’t load avocado stops — ';
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'link-btn';
+      retry.textContent = 'retry';
+      retry.addEventListener('click', function () { renderStops(meters); });
+      stopsMsg.appendChild(retry);
+      show(stopsMsg);
+    });
   }
 
   // --- Hunt loop ---
@@ -221,6 +275,7 @@
   playAgain.addEventListener('click', function () {
     try { localStorage.removeItem(STORE_KEY); } catch (e) {}
     aim = null; targetVec = null; gotOrientation = false; gotAbsolute = false; lockStart = 0;
+    hide(revealDistance); hide(revealStops); hide(stopsMsg); stopsList.innerHTML = '';
     hide(reveal); show(cover);
   });
 
