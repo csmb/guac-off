@@ -23,5 +23,10 @@ eq('tilt gamma=30 -> full right',    H.tiltToGravity(0, 30), { x: 1, y: 0 });
 eq('tilt gamma=-90 -> full left (clamped)', H.tiltToGravity(0, -90), { x: -1, y: 0 });
 eq('tilt beta=15 -> half down',      H.tiltToGravity(15, 0), { x: 0, y: 0.5 });
 
+// --- gravityPx: tiltToGravity scaled by GRAVITY_SCALE (1600) ---
+eq('gravityPx upright -> 1600 down', H.gravityPx(90, 0), { x: 0, y: 1600 });
+eq('gravityPx gamma=30 -> 1600 right', H.gravityPx(0, 30), { x: 1600, y: 0 });
+eq('gravityPx flat -> zero', H.gravityPx(0, 0), { x: 0, y: 0 });
+
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

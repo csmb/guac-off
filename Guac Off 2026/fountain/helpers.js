@@ -45,8 +45,13 @@
     };
   }
 
+  function gravityPx(beta, gamma) {
+    const g = tiltToGravity(beta, gamma);
+    return { x: g.x * GRAVITY_SCALE, y: g.y * GRAVITY_SCALE };
+  }
+
   return {
-    clamp, tiltToGravity, SPOUTS,
+    clamp, tiltToGravity, gravityPx, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
       PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH,
