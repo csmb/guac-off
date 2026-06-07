@@ -107,6 +107,28 @@
     return hi - fillFrac * (hi - lo);
   }
 
+  // Sutherland–Hodgman clip of the screen rectangle by the half-plane
+  // { p : p·dir >= level }. Returns the pool polygon's vertices in order
+  // ([] when nothing is submerged).
+  function clipRectBelow(w, h, dir, level) {
+    const poly = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }];
+    const out = [];
+    for (let i = 0; i < poly.length; i++) {
+      const A = poly[i];
+      const B = poly[(i + 1) % poly.length];
+      const pa = (A.x * dir.x + A.y * dir.y) - level;
+      const pb = (B.x * dir.x + B.y * dir.y) - level;
+      const inA = pa >= 0;
+      const inB = pb >= 0;
+      if (inA) out.push(A);
+      if (inA !== inB) {
+        const t = pa / (pa - pb);
+        out.push({ x: A.x + t * (B.x - A.x), y: A.y + t * (B.y - A.y) });
+      }
+    }
+    return out;
+  }
+
   // True when a point lies below the pool surface (deeper along dir than level).
   function isSubmerged(p, dir, level) {
     return p.x * dir.x + p.y * dir.y >= level;
@@ -120,7 +142,7 @@
   }
 
   return {
-    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, gravityDir, surfaceLevel, isSubmerged, SPOUTS,
+    clamp, tiltToGravity, gravityPx, spawnVelocity, integrate, isDead, spoutToScreen, gravityDir, surfaceLevel, isSubmerged, clipRectBelow, SPOUTS,
     constants: {
       TILT_FULL_DEG, STRENGTH, GRAVITY_SCALE, EMIT_RATE, INIT_SPEED, SPREAD,
       PARTICLE_LIFE, DRAG, MAX_PARTICLES, POOL_FRAC, WATER_RGB, STREAK_ALPHA, LINE_WIDTH, CULL_MARGIN,

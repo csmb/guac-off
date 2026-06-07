@@ -65,6 +65,15 @@ eq('gravityPx upright -> 1600 down', H.gravityPx(90, 0), { x: 0, y: 1600 });
 eq('gravityPx gamma=30 -> 1600 right', H.gravityPx(0, 30), { x: 1600, y: 0 });
 eq('gravityPx flat -> zero', H.gravityPx(0, 0), { x: 0, y: 0 });
 
+// --- clipRectBelow: screen-rect polygon on the submerged side of the surface ---
+eq('clipRectBelow half (bottom rect)',
+   H.clipRectBelow(100, 200, { x: 0, y: 1 }, 100),
+   [{ x: 100, y: 100 }, { x: 100, y: 200 }, { x: 0, y: 200 }, { x: 0, y: 100 }]);
+eq('clipRectBelow full (whole rect)',
+   H.clipRectBelow(100, 200, { x: 0, y: 1 }, 0),
+   [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 200 }, { x: 0, y: 200 }]);
+eq('clipRectBelow empty', H.clipRectBelow(100, 200, { x: 0, y: 1 }, 250), []);
+
 // --- isSubmerged: point is below the surface (projection along dir >= level) ---
 eq('isSubmerged below horiz', H.isSubmerged({ x: 50, y: 150 }, { x: 0, y: 1 }, 100), true);
 eq('isSubmerged above horiz', H.isSubmerged({ x: 50, y: 50 }, { x: 0, y: 1 }, 100), false);
