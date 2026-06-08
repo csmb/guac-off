@@ -69,5 +69,33 @@
     return p;
   }
 
-  return { K, clamp, tiltToGravity, gravityDir, surfaceLevel, clipRectBelow, integrate };
+  // spring-damped surface normal with momentum (slosh). state = {dir:{x,y}, vel:{x,y}}.
+  // Underdamping (small damp relative to k) => visible overshoot before it settles.
+  function sloshStep(state, targetDir, dt, k, damp) {
+    const ax = (targetDir.x - state.dir.x) * k - state.vel.x * damp;
+    const ay = (targetDir.y - state.dir.y) * k - state.vel.y * damp;
+    const vx = state.vel.x + ax * dt;
+    const vy = state.vel.y + ay * dt;
+    const dx = state.dir.x + vx * dt;
+    const dy = state.dir.y + vy * dt;
+    const m = Math.hypot(dx, dy) || 1;
+    return { dir: { x: dx / m, y: dy / m }, vel: { x: vx, y: vy } };
+  }
+
+  // how many splash droplets for a slosh speed (0 below threshold), capped per call
+  function splashCount(speed, threshold, cap) {
+    if (speed <= threshold) return 0;
+    return Math.min(cap, Math.round((speed - threshold) * 8));
+  }
+
+  // polygon vertices (px) -> CSS clip-path polygon() string; <3 points => hidden
+  function pointsToClipPath(poly) {
+    if (!poly || poly.length < 3) return 'polygon(0px 0px, 0px 0px, 0px 0px)';
+    const pts = poly.map(function (p) {
+      return (Math.round(p.x * 100) / 100) + 'px ' + (Math.round(p.y * 100) / 100) + 'px';
+    });
+    return 'polygon(' + pts.join(', ') + ')';
+  }
+
+  return { K, clamp, tiltToGravity, gravityDir, surfaceLevel, clipRectBelow, integrate, sloshStep, splashCount, pointsToClipPath };
 });

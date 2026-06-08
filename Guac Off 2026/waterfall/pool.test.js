@@ -47,5 +47,29 @@ eq('integrate vy', p.vy, 10, 1e-9);
 eq('integrate y', p.y, 1, 1e-9);
 eq('integrate life', p.life, 0.9, 1e-9);
 
+// sloshStep: spring-damped normal with momentum
+const rest = P.sloshStep({ dir: { x: 0, y: 1 }, vel: { x: 0, y: 0 } }, { x: 0, y: 1 }, 0.016, 90, 9);
+eq('slosh at rest dir', rest.dir, { x: 0, y: 1 });
+eq('slosh at rest vel', rest.vel, { x: 0, y: 0 });
+
+const step1 = P.sloshStep({ dir: { x: 0, y: 1 }, vel: { x: 0, y: 0 } }, { x: 1, y: 0 }, 0.016, 90, 9);
+eq('slosh moves toward target (dir.x up)', step1.dir.x > 0, true);
+eq('slosh gains velocity', step1.vel.x > 0, true);
+eq('slosh dir stays unit', Math.hypot(step1.dir.x, step1.dir.y), 1, 1e-9);
+
+let st = { dir: { x: 0, y: 1 }, vel: { x: 0, y: 0 } };
+for (let i = 0; i < 400; i++) st = P.sloshStep(st, { x: 1, y: 0 }, 0.016, 90, 9);
+eq('slosh converges to target', st.dir.x > 0.95, true);
+
+// splashCount: 0 below threshold, scales above, capped
+eq('splash below', P.splashCount(1.0, 1.6, 24), 0);
+eq('splash above', P.splashCount(2.6, 1.6, 24), 8);
+eq('splash capped', P.splashCount(10, 1.6, 24), 24);
+
+// pointsToClipPath: CSS polygon() string; degenerate -> hidden
+eq('clip empty hidden', P.pointsToClipPath([]), 'polygon(0px 0px, 0px 0px, 0px 0px)');
+eq('clip triangle', P.pointsToClipPath([{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 0, y: 10 }]),
+   'polygon(0px 0px, 10px 0px, 0px 10px)');
+
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
