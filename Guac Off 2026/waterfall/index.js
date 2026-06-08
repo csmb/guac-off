@@ -91,6 +91,7 @@ if ('serviceWorker' in navigator) {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       pool.width = Math.round(W * dpr); pool.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (doc) doc.scrollTop = Math.min(doc.scrollTop, Math.max(0, doc.scrollHeight - doc.clientHeight)); // never leave the panel scrolled past its content (no empty space below the footer)
     }
     sizePool();
     window.addEventListener('resize', sizePool);
@@ -255,6 +256,7 @@ if ('serviceWorker' in navigator) {
       updateScroll();
       doc.addEventListener('scroll', updateScroll, { passive: true });
       window.addEventListener('resize', updateScroll);
+      if (window.visualViewport) window.visualViewport.addEventListener('resize', updateScroll); // URL-bar show/hide
       scrollBtn.addEventListener('click', function () {
         doc.scrollBy({ top: Math.round(doc.clientHeight * 0.82), behavior: 'smooth' });
       });
