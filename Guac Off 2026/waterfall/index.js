@@ -77,10 +77,13 @@ if ('serviceWorker' in navigator) {
     const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 
-    let W = 0, H = 0;
+    // full-page sim so water can crash UP past the seam (over the fountain), then settle to it
+    let W = 0, H = 0, seamY = 0, detailsH = 0, restFill = 1;
     function sizePool() {
       const r = details.getBoundingClientRect();
-      W = r.width; H = r.height;
+      W = window.innerWidth; H = window.innerHeight;
+      seamY = r.top; detailsH = r.height;
+      restFill = Math.max(0, Math.min(1, 1 - seamY / H)); // resting waterline sits at the seam (event top)
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       pool.width = Math.round(W * dpr); pool.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -93,24 +96,27 @@ if ('serviceWorker' in navigator) {
     let sGamma = 0;     // smoothed tilt; streams & pool read it with different sensitivity
     let wavePhase = 0;  // animates the surface ripples
     let tiltOn = false;
-    let fill = 0, fillTarget = 1;       // intro fills to full
+    let surge = 0;                      // transient crash-up above the seam, driven by slosh speed
+    let fill = 0, fillTarget = 1;       // intro fills to the seam
     const FILL_MS = 5000;
     let startT = 0;
     const SPLASH = [];
 
     // optional debug/demo: #tilt=beta,gamma forces a tilt (no device needed)
-    const th = location.hash.match(/\btilt=(-?[\d.]+),(-?[\d.]+)/);
-    if (th) { rawGamma = parseFloat(th[2]); sGamma = rawGamma; tiltOn = true; fill = K.RESTING_FILL; fillTarget = K.RESTING_FILL; }
+    const th = location.hash.match(/\btilt=(-?[\d.]+),(-?[\d.]+)(?:,(-?[\d.]+))?/);
+    let forceSurge = null;
+    if (th) { rawGamma = parseFloat(th[2]); sGamma = rawGamma; tiltOn = true; fill = restFill; fillTarget = restFill; if (th[3] != null) forceSurge = parseFloat(th[3]); }
 
     function spawnSplashes(n) {
       const dy = surf.dir.y || 1;
       const level = P.surfaceLevel(surf.dir, W, H, fill);
+      const slosh = Math.hypot(surf.vel.x, surf.vel.y);   // harder slosh => spray crashes higher (over the fountain)
       for (let i = 0; i < n; i++) {
         if (SPLASH.length >= K.SPLASH_CAP) break;
         const x = Math.random() * W;
         let y = (level - x * surf.dir.x) / dy; y = Math.max(0, Math.min(H, y));
         const ux = -surf.dir.x, uy = -surf.dir.y, a = (Math.random() - 0.5) * 1.1;
-        const cs = Math.cos(a), sn = Math.sin(a), sp = 120 + Math.random() * 160;
+        const cs = Math.cos(a), sn = Math.sin(a), sp = 300 + Math.random() * 280 + Math.min(slosh * 220, 520);
         SPLASH.push({ x: x, y: y, px: x, py: y, vx: (ux * cs - uy * sn) * sp, vy: (ux * sn + uy * cs) * sp, life: K.SPLASH_LIFE });
       }
     }
@@ -175,8 +181,8 @@ if ('serviceWorker' in navigator) {
     function frame(now) {
       let dt = (now - last) / 1000; last = now; if (dt > 0.05) dt = 0.05;
       if (!startT) startT = now;
-      if (reduce && !tiltOn) fill = 1;
-      else if (!tiltOn) fill = (window.WaterfallFlood ? window.WaterfallFlood.floodLevel(now - startT, FILL_MS) : 1);
+      if (reduce && !tiltOn) fill = restFill;
+      else if (!tiltOn) fill = restFill * (window.WaterfallFlood ? window.WaterfallFlood.floodLevel(now - startT, FILL_MS) : 1);
       else fill += (fillTarget - fill) * Math.min(1, dt * 3);
 
       // smooth the raw left/right tilt; streams & pool read it with DIFFERENT sensitivity
@@ -188,18 +194,22 @@ if ('serviceWorker' in navigator) {
       const pm = Math.hypot(slope, 1), poolTarget = { x: slope / pm, y: 1 / pm };
       const ns = P.sloshStep(surf, poolTarget, dt, K.SLOSH_K, K.SLOSH_DAMP);
       surf.dir = ns.dir; surf.vel = ns.vel;
+      const surgeT = tiltOn ? Math.min(Math.hypot(surf.vel.x, surf.vel.y) * K.SURGE_GAIN, K.SURGE_MAX) : 0;
+      if (forceSurge != null) surge = forceSurge; // debug/demo override (#tilt=beta,gamma,surge)
+      else surge += (surgeT - surge) * Math.min(1, dt * 8); // crash up on a fast slosh, settle back to the seam
       wavePhase += dt * K.WAVE_SPEED;
 
-      if (tiltOn) { const n = P.splashCount(Math.hypot(surf.vel.x, surf.vel.y), K.SPLASH_SPEED, 18); if (n) spawnSplashes(n); }
+      if (tiltOn) { const n = P.splashCount(Math.hypot(surf.vel.x, surf.vel.y), K.SPLASH_SPEED, 30); if (n) spawnSplashes(n); }
       const ggx = poolTarget.x * K.GRAVITY_SCALE, ggy = poolTarget.y * K.GRAVITY_SCALE;
       for (let i = SPLASH.length - 1; i >= 0; i--) {
         const sp = SPLASH[i]; P.integrate(sp, ggx, ggy, dt, K.SPLASH_DRAG);
         if (sp.life <= 0 || sp.y > H + 40 || sp.x < -40 || sp.x > W + 40) { SPLASH[i] = SPLASH[SPLASH.length - 1]; SPLASH.pop(); }
       }
 
-      const level = P.surfaceLevel(surf.dir, W, H, fill);
-      const poly = P.clipRectBelow(W, H, surf.dir, level);
-      doc.style.clipPath = P.pointsToClipPath(poly);
+      const level = P.surfaceLevel(surf.dir, W, H, Math.min(1, fill + surge)); // fill (to the seam) + transient crash-up
+      const poly = P.clipRectBelow(W, H, surf.dir, level);          // full-page water body
+      const levelD = level - seamY * surf.dir.y;                    // same surface, expressed in details-local space
+      doc.style.clipPath = P.pointsToClipPath(P.clipRectBelow(W, detailsH, surf.dir, levelD)); // reveal follows the surface
       draw(poly);
       raf = requestAnimationFrame(frame);
     }
@@ -221,7 +231,7 @@ if ('serviceWorker' in navigator) {
         }
       } catch (e) { requesting = false; if (tiltBtn) tiltBtn.textContent = 'tap again to allow motion'; return; }
       window.addEventListener('deviceorientation', onOrient);
-      tiltActive = true; tiltOn = true; fillTarget = K.RESTING_FILL;
+      tiltActive = true; tiltOn = true; fillTarget = restFill;
       if (tiltBtn) tiltBtn.classList.add('hide');
     }
     if (coarse && tiltBtn) {

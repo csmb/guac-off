@@ -18,6 +18,8 @@
     RESTING_FILL: 0.98,   // idle waterline right at the top of the event section (slosh can reach the seam)
     SLOSH_K: 50,          // soft surface spring — gentle slosh
     SLOSH_DAMP: 7,        // slightly underdamped — fluid, never a hard stop
+    SURGE_GAIN: 0.30,     // slosh speed -> how high the water crashes up past the seam
+    SURGE_MAX: 0.45,      // max crash-up (restFill + this can reach the page top)
     GRAVITY_SCALE: 1400,  // px/s^2 for splash droplets
     SPLASH_SPEED: 0.9,    // slosh-speed threshold to throw a little spray
     SPLASH_CAP: 200,      // max live splash droplets
