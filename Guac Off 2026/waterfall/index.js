@@ -125,7 +125,7 @@ if ('serviceWorker' in navigator) {
         grad.addColorStop(0, 'rgba(' + K.TINT + ', 0.16)');
         grad.addColorStop(1, 'rgba(' + K.TINT + ', 0.40)');
         ctx.fillStyle = grad; ctx.fill();
-        ctx.strokeStyle = 'rgba(215, 242, 255, 0.92)'; ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(170, 214, 240, 0.9)'; ctx.lineWidth = 2; // single, slightly-blue waterline
         ctx.beginPath();
         for (let i = 0; i < poly.length; i++) {
           const A = poly[i], B = poly[(i + 1) % poly.length];
@@ -195,6 +195,13 @@ if ('serviceWorker' in navigator) {
     if (coarse && tiltBtn) {
       tiltBtn.classList.add('show');
       tiltBtn.addEventListener('click', enableTilt);
+    }
+
+    // scroll-hint chevrons: show only if the details overflow, fade on first scroll
+    const hints = details.querySelectorAll('.wf-scroll-hint');
+    if (doc.scrollHeight > doc.clientHeight + 4) {
+      hints.forEach(function (a) { a.classList.add('show'); });
+      doc.addEventListener('scroll', function () { hints.forEach(function (a) { a.classList.add('hide'); }); }, { once: true, passive: true });
     }
 
     window.addEventListener('pagehide', function () {

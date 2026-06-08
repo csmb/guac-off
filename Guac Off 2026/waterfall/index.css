@@ -119,12 +119,21 @@ body {
   .chips li { font-size: 11px; padding: 1px 8px; }
 }
 
-/* where the flood meets the fountain: a watery base on the stage so the two read as one body */
-.wf-stage::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 16px;
-  background: linear-gradient(to bottom, rgba(150, 205, 235, 0), rgba(150, 205, 235, 0.26));
-  pointer-events: none;
+/* scroll-hint chevrons (one per side) — JS shows them only if the panel overflows */
+.wf-scroll-hint {
+  position: absolute; top: 60%; z-index: 2; width: 13px; height: 13px;
+  border-right: 3px solid rgba(170, 212, 240, 0.72);
+  border-bottom: 3px solid rgba(170, 212, 240, 0.72);
+  transform: rotate(45deg);
+  pointer-events: none; opacity: 0; display: none;
+  animation: wf-scroll-bob 1.5s ease-in-out infinite;
 }
+.wf-scroll-hint--l { left: 6px; }
+.wf-scroll-hint--r { right: 6px; }
+.wf-scroll-hint.show { display: block; opacity: 0.9; }
+.wf-scroll-hint.hide { opacity: 0; transition: opacity 400ms ease; }
+@keyframes wf-scroll-bob { 0%, 100% { top: 60%; } 50% { top: 62%; } }
+@media (prefers-reduced-motion: reduce) { .wf-scroll-hint { animation: none; } }
 
 /* the sloshing water, drawn on canvas over the details; the clip reveals the HTML beneath */
 #pool { position: absolute; inset: 0; z-index: 1; pointer-events: none; }

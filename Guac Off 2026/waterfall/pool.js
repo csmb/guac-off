@@ -12,7 +12,7 @@
   const K = {
     TILT_FULL_DEG: 16,    // degrees of tilt mapped to full gravity (smaller = far more aggressive)
     GRAVITY_SCALE: 1600,  // px/s^2 at full tilt (splash droplets)
-    RESTING_FILL: 0.7,    // pool fill once the toy wakes (slosh headroom)
+    RESTING_FILL: 0.9,    // pool fill once the toy wakes (covers most of the section; a little slosh headroom)
     SLOSH_K: 90,          // surface spring stiffness (1/s^2)
     SLOSH_DAMP: 9,        // surface spring damping (1/s)
     SPLASH_SPEED: 1.6,    // slosh-speed threshold to throw spray
