@@ -257,13 +257,6 @@ if ('serviceWorker' in navigator) {
     });
   })();
 
-  // hint pill: fade after 7s or on first click
-  const hint = document.getElementById('hint');
-  let hintGone = false;
-  function hideHint() { if (hintGone) return; hintGone = true; if (hint) hint.classList.add('hide'); }
-  setTimeout(hideHint, 7000);
-  canvas.addEventListener('click', hideHint, { once: true });
-
   // lifecycle: tear the engine down when the page is hidden/unloaded
   window.addEventListener('pagehide', function () { wf.destroy(); });
 })();
