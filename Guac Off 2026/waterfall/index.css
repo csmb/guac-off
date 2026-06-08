@@ -106,20 +106,26 @@ body {
   .chips li { font-size: 11px; padding: 1px 8px; }
 }
 
-/* scroll-hint chevrons (one per side) — JS shows them only if the panel overflows */
-.wf-scroll-hint {
-  position: absolute; top: 78%; z-index: 4; width: 13px; height: 13px;
-  border-right: 3px solid rgba(170, 212, 240, 0.72);
-  border-bottom: 3px solid rgba(170, 212, 240, 0.72);
-  transform: rotate(45deg);
-  pointer-events: none; opacity: 0; display: none;
-  animation: wf-scroll-bob 1.5s ease-in-out infinite;
+/* tappable "scroll down for more" button — shown while the details panel can scroll further */
+.wf-scroll-btn {
+  position: absolute; right: 12px; bottom: 16px; z-index: 4;
+  width: 42px; height: 42px; border-radius: 999px; padding: 0;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(10, 20, 30, 0.55); border: 1.5px solid rgba(170, 212, 240, 0.6);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  cursor: pointer; animation: wf-scroll-bob 1.6s ease-in-out infinite;
+  transition: opacity 350ms ease;
 }
-.wf-scroll-hint--r { right: 6px; }
-.wf-scroll-hint.show { display: block; opacity: 0.9; }
-.wf-scroll-hint.hide { opacity: 0; transition: opacity 400ms ease; }
-@keyframes wf-scroll-bob { 0%, 100% { top: 78%; } 50% { top: 80%; } }
-@media (prefers-reduced-motion: reduce) { .wf-scroll-hint { animation: none; } }
+.wf-scroll-btn.show { display: flex; }
+.wf-scroll-btn.atbottom { opacity: 0; pointer-events: none; } /* nothing more below */
+.wf-scroll-btn::before {
+  content: ''; width: 11px; height: 11px; margin-top: -3px;
+  border-right: 2.5px solid rgba(214, 236, 255, 0.95);
+  border-bottom: 2.5px solid rgba(214, 236, 255, 0.95);
+  transform: rotate(45deg);
+}
+@keyframes wf-scroll-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .wf-scroll-btn { animation: none; } }
 
 /* the sloshing water, drawn on canvas over the details; the clip reveals the HTML beneath */
 #pool { position: fixed; top: 0; left: 0; z-index: 3; pointer-events: none; } /* viewport overlay (size set in JS) so water can crash up over the fountain */

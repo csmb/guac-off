@@ -243,11 +243,20 @@ if ('serviceWorker' in navigator) {
       tiltBtn.addEventListener('click', enableTilt);
     }
 
-    // scroll-hint chevrons: show only if the details overflow, fade on first scroll
-    const hints = details.querySelectorAll('.wf-scroll-hint');
-    if (doc.scrollHeight > doc.clientHeight + 4) {
-      hints.forEach(function (a) { a.classList.add('show'); });
-      doc.addEventListener('scroll', function () { hints.forEach(function (a) { a.classList.add('hide'); }); }, { once: true, passive: true });
+    // "scroll down" button: tap to scroll the details; visible while there's more below
+    const scrollBtn = document.getElementById('scroll-down');
+    if (scrollBtn) {
+      const updateScroll = function () {
+        if (doc.scrollHeight > doc.clientHeight + 4) scrollBtn.classList.add('show');
+        else scrollBtn.classList.remove('show');
+        scrollBtn.classList.toggle('atbottom', doc.scrollHeight - doc.clientHeight - doc.scrollTop <= 8);
+      };
+      updateScroll();
+      doc.addEventListener('scroll', updateScroll, { passive: true });
+      window.addEventListener('resize', updateScroll);
+      scrollBtn.addEventListener('click', function () {
+        doc.scrollBy({ top: Math.round(doc.clientHeight * 0.82), behavior: 'smooth' });
+      });
     }
 
     window.addEventListener('pagehide', function () {
