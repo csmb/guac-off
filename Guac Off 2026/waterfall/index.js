@@ -80,8 +80,11 @@ if ('serviceWorker' in navigator) {
     // full-page sim so water can crash UP past the seam (over the fountain), then settle to it
     let W = 0, H = 0, seamY = 0, detailsH = 0, restFill = 1;
     function sizePool() {
+      const vv = window.visualViewport;
+      W = vv ? vv.width : window.innerWidth;
+      H = vv ? vv.height : window.innerHeight;     // the actually-visible height (excludes the mobile URL bar)
+      pool.style.width = W + 'px'; pool.style.height = H + 'px'; // match display size to the backing store -> no vertical stretch
       const r = details.getBoundingClientRect();
-      W = window.innerWidth; H = window.innerHeight;
       seamY = r.top; detailsH = r.height;
       restFill = Math.max(0, Math.min(1, 1 - seamY / H)); // resting waterline sits at the seam (event top)
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -90,6 +93,7 @@ if ('serviceWorker' in navigator) {
     }
     sizePool();
     window.addEventListener('resize', sizePool);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', sizePool); // URL-bar show/hide
 
     const surf = { dir: { x: 0, y: 1 }, vel: { x: 0, y: 0 } };
     let rawGamma = 0;   // latest left/right tilt (degrees) from the device

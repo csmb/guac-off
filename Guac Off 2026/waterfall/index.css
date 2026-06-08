@@ -135,7 +135,7 @@ body {
 @media (prefers-reduced-motion: reduce) { .wf-scroll-hint { animation: none; } }
 
 /* the sloshing water, drawn on canvas over the details; the clip reveals the HTML beneath */
-#pool { position: fixed; inset: 0; z-index: 3; pointer-events: none; } /* full-viewport so water can crash up over the fountain */
+#pool { position: fixed; top: 0; left: 0; z-index: 3; pointer-events: none; } /* viewport overlay (size set in JS) so water can crash up over the fountain */
 
 /* tap-to-enable-tilt pill (JS adds .show on touch devices, .hide once enabled) */
 .tilt-enable {
