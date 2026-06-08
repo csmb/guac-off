@@ -83,6 +83,7 @@ if ('serviceWorker' in navigator) {
       const vv = window.visualViewport;
       W = vv ? vv.width : window.innerWidth;
       H = vv ? vv.height : window.innerHeight;     // the actually-visible height (excludes the mobile URL bar)
+      document.body.style.height = H + 'px';       // pin the page to the visible viewport so the details don't run below the fold (scroll stops at the footer)
       pool.style.width = W + 'px'; pool.style.height = H + 'px'; // match display size to the backing store -> no vertical stretch
       const r = details.getBoundingClientRect();
       seamY = r.top; detailsH = r.height;
