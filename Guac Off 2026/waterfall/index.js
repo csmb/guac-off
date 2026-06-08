@@ -89,8 +89,9 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('resize', sizePool);
 
     const surf = { dir: { x: 0, y: 1 }, vel: { x: 0, y: 0 } };
-    let gRaw = { x: 0, y: 1 };          // latest gravity from tilt (unit-ish)
-    const gSmooth = { x: 0, y: 1 };     // low-passed gravity
+    let rawGamma = 0;   // latest left/right tilt (degrees) from the device
+    let sGamma = 0;     // smoothed tilt; streams & pool read it with different sensitivity
+    let wavePhase = 0;  // animates the surface ripples
     let tiltOn = false;
     let fill = 0, fillTarget = 1;       // intro fills to full
     const FILL_MS = 5000;
@@ -99,7 +100,7 @@ if ('serviceWorker' in navigator) {
 
     // optional debug/demo: #tilt=beta,gamma forces a tilt (no device needed)
     const th = location.hash.match(/\btilt=(-?[\d.]+),(-?[\d.]+)/);
-    if (th) { gRaw = P.tiltToGravity(parseFloat(th[1]), parseFloat(th[2])); tiltOn = true; fill = K.RESTING_FILL; fillTarget = K.RESTING_FILL; }
+    if (th) { rawGamma = parseFloat(th[2]); sGamma = rawGamma; tiltOn = true; fill = K.RESTING_FILL; fillTarget = K.RESTING_FILL; }
 
     function spawnSplashes(n) {
       const dy = surf.dir.y || 1;
@@ -117,22 +118,50 @@ if ('serviceWorker' in navigator) {
     function draw(poly) {
       ctx.clearRect(0, 0, W, H);
       if (poly.length >= 3) {
-        ctx.beginPath(); ctx.moveTo(poly[0].x, poly[0].y);
-        for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i].x, poly[i].y);
+        // find the water surface edge (the polygon edge not lying on a screen border)
+        let si = -1;
+        for (let i = 0; i < poly.length; i++) {
+          const A = poly[i], B = poly[(i + 1) % poly.length];
+          const border = (A.x < 0.5 && B.x < 0.5) || (A.x > W - 0.5 && B.x > W - 0.5) || (A.y < 0.5 && B.y < 0.5) || (A.y > H - 0.5 && B.y > H - 0.5);
+          if (!border) { si = i; break; }
+        }
+        // sample a rippling line across that edge (perpendicular sine offset, two waves)
+        let surfPts = null;
+        if (si >= 0) {
+          const A = poly[si], B = poly[(si + 1) % poly.length];
+          const dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy) || 1;
+          const nx = -dy / len, ny = dx / len, SEG = 28;
+          surfPts = [];
+          for (let k = 0; k <= SEG; k++) {
+            const t = k / SEG;
+            const w = K.WAVE_AMP * Math.sin(t * K.WAVE_FREQ * 6.2832 + wavePhase) + K.WAVE_AMP2 * Math.sin(t * K.WAVE_FREQ2 * 6.2832 - wavePhase * 1.3);
+            surfPts.push({ x: A.x + dx * t + nx * w, y: A.y + dy * t + ny * w });
+          }
+        }
+        // water body — rippling top where we found a surface edge, else the raw polygon
+        ctx.beginPath();
+        if (surfPts) {
+          ctx.moveTo(surfPts[0].x, surfPts[0].y);
+          for (let k = 1; k < surfPts.length; k++) ctx.lineTo(surfPts[k].x, surfPts[k].y);
+          for (let k = 2; k < poly.length; k++) { const v = poly[(si + k) % poly.length]; ctx.lineTo(v.x, v.y); }
+        } else {
+          ctx.moveTo(poly[0].x, poly[0].y);
+          for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i].x, poly[i].y);
+        }
         ctx.closePath();
         const gd = surf.dir;
         const grad = ctx.createLinearGradient(W / 2 - gd.x * H, H / 2 - gd.y * H, W / 2 + gd.x * H, H / 2 + gd.y * H);
         grad.addColorStop(0, 'rgba(' + K.TINT + ', 0.16)');
         grad.addColorStop(1, 'rgba(' + K.TINT + ', 0.40)');
         ctx.fillStyle = grad; ctx.fill();
-        ctx.strokeStyle = 'rgba(170, 214, 240, 0.9)'; ctx.lineWidth = 2; // single, slightly-blue waterline
-        ctx.beginPath();
-        for (let i = 0; i < poly.length; i++) {
-          const A = poly[i], B = poly[(i + 1) % poly.length];
-          const border = (A.x < 0.5 && B.x < 0.5) || (A.x > W - 0.5 && B.x > W - 0.5) || (A.y < 0.5 && B.y < 0.5) || (A.y > H - 0.5 && B.y > H - 0.5);
-          if (!border) { ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); }
+        // single, slightly-blue rippling waterline
+        if (surfPts) {
+          ctx.strokeStyle = 'rgba(170, 214, 240, 0.9)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.moveTo(surfPts[0].x, surfPts[0].y);
+          for (let k = 1; k < surfPts.length; k++) ctx.lineTo(surfPts[k].x, surfPts[k].y);
+          ctx.stroke();
         }
-        ctx.stroke();
       }
       if (SPLASH.length) {
         ctx.strokeStyle = 'rgba(225, 245, 255, 0.85)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
@@ -150,20 +179,23 @@ if ('serviceWorker' in navigator) {
       else if (!tiltOn) fill = (window.WaterfallFlood ? window.WaterfallFlood.floodLevel(now - startT, FILL_MS) : 1);
       else fill += (fillTarget - fill) * Math.min(1, dt * 3);
 
-      gSmooth.x += (gRaw.x - gSmooth.x) * Math.min(1, dt * 6);
-      gSmooth.y += (gRaw.y - gSmooth.y) * Math.min(1, dt * 6);
-      const gd = P.gravityDir(gSmooth);
-      const ns = P.sloshStep(surf, gd, dt, K.SLOSH_K, K.SLOSH_DAMP);
+      // smooth the raw left/right tilt; streams & pool read it with DIFFERENT sensitivity
+      sGamma += ((tiltOn ? rawGamma : 0) - sGamma) * Math.min(1, dt * 5);
+      // fountain streams: aggressive, soft-saturated (tanh => move far, never a hard stop)
+      if (tiltOn) config.wind = P.clamp(K.WIND_MAG * Math.tanh(sGamma / K.STREAM_FULL_DEG), -K.WIND_CAP, K.WIND_CAP);
+      // pool surface: gentle + less sensitive — a small soft-saturated slope toward the tilt
+      const slope = K.POOL_MAX_SLOPE * Math.tanh(sGamma / K.POOL_FULL_DEG);
+      const pm = Math.hypot(slope, 1), poolTarget = { x: slope / pm, y: 1 / pm };
+      const ns = P.sloshStep(surf, poolTarget, dt, K.SLOSH_K, K.SLOSH_DAMP);
       surf.dir = ns.dir; surf.vel = ns.vel;
+      wavePhase += dt * K.WAVE_SPEED;
 
-      if (tiltOn) { const n = P.splashCount(Math.hypot(surf.vel.x, surf.vel.y), K.SPLASH_SPEED, 24); if (n) spawnSplashes(n); }
-      const ggx = gd.x * K.GRAVITY_SCALE, ggy = gd.y * K.GRAVITY_SCALE;
+      if (tiltOn) { const n = P.splashCount(Math.hypot(surf.vel.x, surf.vel.y), K.SPLASH_SPEED, 18); if (n) spawnSplashes(n); }
+      const ggx = poolTarget.x * K.GRAVITY_SCALE, ggy = poolTarget.y * K.GRAVITY_SCALE;
       for (let i = SPLASH.length - 1; i >= 0; i--) {
         const sp = SPLASH[i]; P.integrate(sp, ggx, ggy, dt, K.SPLASH_DRAG);
         if (sp.life <= 0 || sp.y > H + 40 || sp.x < -40 || sp.x > W + 40) { SPLASH[i] = SPLASH[SPLASH.length - 1]; SPLASH.pop(); }
       }
-
-      if (tiltOn) config.wind = P.clamp(gd.x * K.WIND_GAIN, -K.WIND_CAP, K.WIND_CAP); // leave wind alone until tilt is on (keeps any &wind= debug)
 
       const level = P.surfaceLevel(surf.dir, W, H, fill);
       const poly = P.clipRectBelow(W, H, surf.dir, level);
@@ -173,7 +205,7 @@ if ('serviceWorker' in navigator) {
     }
     raf = requestAnimationFrame(frame);
 
-    function onOrient(e) { gRaw = P.tiltToGravity(e.beta || 0, e.gamma || 0); }
+    function onOrient(e) { rawGamma = e.gamma || 0; }
     // iOS Safari only shows the motion-permission dialog for a click/tap gesture — a
     // pointerdown/touchstart-initiated requestPermission() silently hangs. So enable
     // ONLY from the pill's click (matching the working /fountain/ page), and don't latch

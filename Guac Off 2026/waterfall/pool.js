@@ -10,34 +10,28 @@
 
   // Feel dials — tune live on a phone.
   const K = {
-    TILT_FULL_DEG: 16,    // degrees of tilt mapped to full gravity (smaller = far more aggressive)
-    GRAVITY_SCALE: 1600,  // px/s^2 at full tilt (splash droplets)
-    RESTING_FILL: 0.9,    // pool fill once the toy wakes (covers most of the section; a little slosh headroom)
-    SLOSH_K: 90,          // surface spring stiffness (1/s^2)
-    SLOSH_DAMP: 9,        // surface spring damping (1/s)
-    SPLASH_SPEED: 1.6,    // slosh-speed threshold to throw spray
-    SPLASH_CAP: 240,      // max live splash droplets
+    STREAM_FULL_DEG: 12,  // gamma° for near-full stream lean (smaller = more aggressive)
+    WIND_MAG: 8.0,        // stream lean magnitude at full tilt
+    WIND_CAP: 9.0,        // hard cap on engine wind
+    POOL_FULL_DEG: 30,    // gamma° to approach the pool's gentle max tilt (larger = less sensitive)
+    POOL_MAX_SLOPE: 0.18, // tan of the pool surface's gentle max tilt (~10°)
+    RESTING_FILL: 0.98,   // idle waterline right at the top of the event section (slosh can reach the seam)
+    SLOSH_K: 50,          // soft surface spring — gentle slosh
+    SLOSH_DAMP: 7,        // slightly underdamped — fluid, never a hard stop
+    GRAVITY_SCALE: 1400,  // px/s^2 for splash droplets
+    SPLASH_SPEED: 0.9,    // slosh-speed threshold to throw a little spray
+    SPLASH_CAP: 200,      // max live splash droplets
     SPLASH_DRAG: 0.12,    // per-second droplet damping
-    SPLASH_LIFE: 1.4,     // seconds
-    WIND_GAIN: 4.5,       // gravity.x -> engine wind (streams lean hard with tilt)
-    WIND_CAP: 5.0,
-    GRAVITY_EPS: 1e-3,
+    SPLASH_LIFE: 1.3,     // seconds
+    WAVE_AMP: 2.6,        // primary ripple amplitude (px)
+    WAVE_AMP2: 1.4,       // secondary ripple amplitude (px)
+    WAVE_FREQ: 2.4,       // primary ripples across the surface
+    WAVE_FREQ2: 4.3,      // secondary ripple count
+    WAVE_SPEED: 1.7,      // ripple drift speed
     TINT: '150, 205, 235',
   };
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-
-  // phone tilt -> unit-ish gravity (gamma=L/R roll -> x, beta=F/B pitch -> y)
-  function tiltToGravity(beta, gamma) {
-    return { x: clamp(gamma / K.TILT_FULL_DEG, -1, 1), y: clamp(beta / K.TILT_FULL_DEG, -1, 1) };
-  }
-
-  // unit "down" vector; flat -> {0,1}
-  function gravityDir(g) {
-    const m = Math.hypot(g.x, g.y);
-    if (m < K.GRAVITY_EPS) return { x: 0, y: 1 };
-    return { x: g.x / m, y: g.y / m };
-  }
 
   // projection of the pool surface for fill fraction (0 empty .. 1 full) in a w*h box
   function surfaceLevel(dir, w, h, fillFrac) {
@@ -97,5 +91,5 @@
     return 'polygon(' + pts.join(', ') + ')';
   }
 
-  return { K, clamp, tiltToGravity, gravityDir, surfaceLevel, clipRectBelow, integrate, sloshStep, splashCount, pointsToClipPath };
+  return { K, clamp, surfaceLevel, clipRectBelow, integrate, sloshStep, splashCount, pointsToClipPath };
 });

@@ -16,17 +16,6 @@ eq('clamp hi', P.clamp(5, 0, 1), 1);
 eq('clamp lo', P.clamp(-1, 0, 1), 0);
 eq('clamp mid', P.clamp(0.5, 0, 1), 0.5);
 
-// tiltToGravity: x=gamma/TILT_FULL_DEG clamped, y=beta/TILT_FULL_DEG clamped
-eq('tilt flat', P.tiltToGravity(0, 0), { x: 0, y: 0 });
-eq('tilt right', P.tiltToGravity(0, 60), { x: 1, y: 0 });
-eq('tilt back', P.tiltToGravity(-60, 0), { x: 0, y: -1 });
-eq('tilt clamp', P.tiltToGravity(0, 999), { x: 1, y: 0 });
-eq('tilt half', P.tiltToGravity(P.K.TILT_FULL_DEG / 2, P.K.TILT_FULL_DEG / 2), { x: 0.5, y: 0.5 });
-
-// gravityDir: unit down; flat -> {0,1}
-eq('gdir flat', P.gravityDir({ x: 0, y: 0 }), { x: 0, y: 1 });
-eq('gdir 345', P.gravityDir({ x: 3, y: 4 }), { x: 0.6, y: 0.8 });
-
 // surfaceLevel: projection for a fill fraction in a w*h box
 eq('surf flat empty', P.surfaceLevel({ x: 0, y: 1 }, 100, 200, 0), 200, 1e-9);
 eq('surf flat full', P.surfaceLevel({ x: 0, y: 1 }, 100, 200, 1), 0, 1e-9);
