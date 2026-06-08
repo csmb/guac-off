@@ -62,28 +62,143 @@ if ('serviceWorker' in navigator) {
 
   const wf = window.createWaterfall({ canvas: canvas, config: config, spouts: spouts });
 
-  // --- rising-water flood: drive --flood-level on the details section over ~5s ---
-  // CSS turns --flood-level into the water height and the crisp reveal clip.
-  const details = document.getElementById('wf-details');
-  if (details) {
-    const FLOOD_MS = 5000;
+  // --- tilt-slosh pool: canvas water + per-frame polygon reveal, steered by gravity ---
+  // Flat phone => a level waterline rising over ~5s (the old flood); tilt => the pool
+  // sloshes, the reveal follows, the streams lean (engine wind), and spray flies.
+  (function setupPool() {
+    const details = document.getElementById('wf-details');
+    const doc = details && details.querySelector('.wf-doc');
+    const pool = document.getElementById('pool');
+    const tiltBtn = document.getElementById('tilt-enable');
+    const P = window.WaterfallPool;
+    if (!details || !doc || !pool || !P) { if (doc) doc.style.clipPath = 'none'; return; } // fail safe: show details
+    const K = P.K;
+    const ctx = pool.getContext('2d');
     const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    const F = window.WaterfallFlood;
-    if (reduce || !F) {
-      details.style.setProperty('--flood-level', '1'); // accessible: reveal details immediately
-    } else {
-      let floodRaf = 0, startT = 0;
-      const floodFrame = function (now) {
-        if (!startT) startT = now;
-        const lvl = F.floodLevel(now - startT, FLOOD_MS);
-        details.style.setProperty('--flood-level', String(lvl));
-        if (lvl < 1) floodRaf = requestAnimationFrame(floodFrame);
-      };
-      floodRaf = requestAnimationFrame(floodFrame);
-      // stop the flood if the page is hidden mid-rise (distinct from the engine teardown below)
-      window.addEventListener('pagehide', function () { cancelAnimationFrame(floodRaf); });
+    const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+
+    let W = 0, H = 0;
+    function sizePool() {
+      const r = details.getBoundingClientRect();
+      W = r.width; H = r.height;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      pool.width = Math.round(W * dpr); pool.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-  }
+    sizePool();
+    window.addEventListener('resize', sizePool);
+
+    const surf = { dir: { x: 0, y: 1 }, vel: { x: 0, y: 0 } };
+    let gRaw = { x: 0, y: 1 };          // latest gravity from tilt (unit-ish)
+    const gSmooth = { x: 0, y: 1 };     // low-passed gravity
+    let tiltOn = false;
+    let fill = 0, fillTarget = 1;       // intro fills to full
+    const FILL_MS = 5000;
+    let startT = 0;
+    const SPLASH = [];
+
+    // optional debug/demo: #tilt=beta,gamma forces a tilt (no device needed)
+    const th = location.hash.match(/tilt=(-?[\d.]+),(-?[\d.]+)/);
+    if (th) { gRaw = P.tiltToGravity(parseFloat(th[1]), parseFloat(th[2])); tiltOn = true; fill = K.RESTING_FILL; fillTarget = K.RESTING_FILL; }
+
+    function spawnSplashes(n) {
+      const dy = surf.dir.y || 1;
+      const level = P.surfaceLevel(surf.dir, W, H, fill);
+      for (let i = 0; i < n; i++) {
+        if (SPLASH.length >= K.SPLASH_CAP) break;
+        const x = Math.random() * W;
+        let y = (level - x * surf.dir.x) / dy; y = Math.max(0, Math.min(H, y));
+        const ux = -surf.dir.x, uy = -surf.dir.y, a = (Math.random() - 0.5) * 1.1;
+        const cs = Math.cos(a), sn = Math.sin(a), sp = 120 + Math.random() * 160;
+        SPLASH.push({ x: x, y: y, px: x, py: y, vx: (ux * cs - uy * sn) * sp, vy: (ux * sn + uy * cs) * sp, life: K.SPLASH_LIFE });
+      }
+    }
+
+    function draw(poly) {
+      ctx.clearRect(0, 0, W, H);
+      if (poly.length >= 3) {
+        ctx.beginPath(); ctx.moveTo(poly[0].x, poly[0].y);
+        for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i].x, poly[i].y);
+        ctx.closePath();
+        const gd = surf.dir;
+        const grad = ctx.createLinearGradient(W / 2 - gd.x * H, H / 2 - gd.y * H, W / 2 + gd.x * H, H / 2 + gd.y * H);
+        grad.addColorStop(0, 'rgba(' + K.TINT + ', 0.16)');
+        grad.addColorStop(1, 'rgba(' + K.TINT + ', 0.40)');
+        ctx.fillStyle = grad; ctx.fill();
+        ctx.strokeStyle = 'rgba(215, 242, 255, 0.92)'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < poly.length; i++) {
+          const A = poly[i], B = poly[(i + 1) % poly.length];
+          const border = (A.x < 0.5 && B.x < 0.5) || (A.x > W - 0.5 && B.x > W - 0.5) || (A.y < 0.5 && B.y < 0.5) || (A.y > H - 0.5 && B.y > H - 0.5);
+          if (!border) { ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); }
+        }
+        ctx.stroke();
+      }
+      if (SPLASH.length) {
+        ctx.strokeStyle = 'rgba(225, 245, 255, 0.85)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        ctx.beginPath();
+        for (let i = 0; i < SPLASH.length; i++) { const p = SPLASH[i]; ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); }
+        ctx.stroke();
+      }
+    }
+
+    let last = performance.now(), raf = 0;
+    function frame(now) {
+      let dt = (now - last) / 1000; last = now; if (dt > 0.05) dt = 0.05;
+      if (!startT) startT = now;
+      if (reduce && !tiltOn) fill = 1;
+      else if (!tiltOn) fill = (window.WaterfallFlood ? window.WaterfallFlood.floodLevel(now - startT, FILL_MS) : 1);
+      else fill += (fillTarget - fill) * Math.min(1, dt * 3);
+
+      gSmooth.x += (gRaw.x - gSmooth.x) * Math.min(1, dt * 6);
+      gSmooth.y += (gRaw.y - gSmooth.y) * Math.min(1, dt * 6);
+      const gd = P.gravityDir(gSmooth);
+      const ns = P.sloshStep(surf, gd, dt, K.SLOSH_K, K.SLOSH_DAMP);
+      surf.dir = ns.dir; surf.vel = ns.vel;
+
+      if (tiltOn) { const n = P.splashCount(Math.hypot(surf.vel.x, surf.vel.y), K.SPLASH_SPEED, 24); if (n) spawnSplashes(n); }
+      const ggx = gd.x * K.GRAVITY_SCALE, ggy = gd.y * K.GRAVITY_SCALE;
+      for (let i = SPLASH.length - 1; i >= 0; i--) {
+        const sp = SPLASH[i]; P.integrate(sp, ggx, ggy, dt, K.SPLASH_DRAG);
+        if (sp.life <= 0 || sp.y > H + 40 || sp.x < -40 || sp.x > W + 40) { SPLASH[i] = SPLASH[SPLASH.length - 1]; SPLASH.pop(); }
+      }
+
+      config.wind = tiltOn ? P.clamp(gd.x * K.WIND_GAIN, -K.WIND_CAP, K.WIND_CAP) : 0;
+
+      const level = P.surfaceLevel(surf.dir, W, H, fill);
+      const poly = P.clipRectBelow(W, H, surf.dir, level);
+      doc.style.clipPath = P.pointsToClipPath(poly);
+      draw(poly);
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+
+    function onOrient(e) { gRaw = P.tiltToGravity(e.beta || 0, e.gamma || 0); }
+    let enabled = false;
+    async function enableTilt() {
+      if (enabled || !coarse) return; enabled = true;
+      try {
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+          const res = await DeviceOrientationEvent.requestPermission();
+          if (res !== 'granted') { if (tiltBtn) { tiltBtn.textContent = 'motion is off'; setTimeout(function () { tiltBtn.classList.add('hide'); }, 1400); } return; }
+        }
+      } catch (e) { if (tiltBtn) tiltBtn.classList.add('hide'); return; }
+      window.addEventListener('deviceorientation', onOrient);
+      tiltOn = true; fillTarget = K.RESTING_FILL;
+      if (tiltBtn) tiltBtn.classList.add('hide');
+    }
+    if (coarse && tiltBtn) {
+      tiltBtn.classList.add('show');
+      tiltBtn.addEventListener('click', enableTilt);
+      window.addEventListener('pointerdown', function () { enableTilt(); }, { once: true });
+    }
+
+    window.addEventListener('pagehide', function () {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', sizePool);
+      window.removeEventListener('deviceorientation', onOrient);
+    });
+  })();
 
   // hint pill: fade after 7s or on first click
   const hint = document.getElementById('hint');
