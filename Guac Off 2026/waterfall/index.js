@@ -98,7 +98,7 @@ if ('serviceWorker' in navigator) {
     const SPLASH = [];
 
     // optional debug/demo: #tilt=beta,gamma forces a tilt (no device needed)
-    const th = location.hash.match(/tilt=(-?[\d.]+),(-?[\d.]+)/);
+    const th = location.hash.match(/\btilt=(-?[\d.]+),(-?[\d.]+)/);
     if (th) { gRaw = P.tiltToGravity(parseFloat(th[1]), parseFloat(th[2])); tiltOn = true; fill = K.RESTING_FILL; fillTarget = K.RESTING_FILL; }
 
     function spawnSplashes(n) {
@@ -163,7 +163,7 @@ if ('serviceWorker' in navigator) {
         if (sp.life <= 0 || sp.y > H + 40 || sp.x < -40 || sp.x > W + 40) { SPLASH[i] = SPLASH[SPLASH.length - 1]; SPLASH.pop(); }
       }
 
-      config.wind = tiltOn ? P.clamp(gd.x * K.WIND_GAIN, -K.WIND_CAP, K.WIND_CAP) : 0;
+      if (tiltOn) config.wind = P.clamp(gd.x * K.WIND_GAIN, -K.WIND_CAP, K.WIND_CAP); // leave wind alone until tilt is on (keeps any &wind= debug)
 
       const level = P.surfaceLevel(surf.dir, W, H, fill);
       const poly = P.clipRectBelow(W, H, surf.dir, level);
