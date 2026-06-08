@@ -80,6 +80,7 @@ if ('serviceWorker' in navigator) {
         if (lvl < 1) floodRaf = requestAnimationFrame(floodFrame);
       };
       floodRaf = requestAnimationFrame(floodFrame);
+      // stop the flood if the page is hidden mid-rise (distinct from the engine teardown below)
       window.addEventListener('pagehide', function () { cancelAnimationFrame(floodRaf); });
     }
   }
