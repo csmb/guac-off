@@ -16,12 +16,12 @@ eq('clamp hi', P.clamp(5, 0, 1), 1);
 eq('clamp lo', P.clamp(-1, 0, 1), 0);
 eq('clamp mid', P.clamp(0.5, 0, 1), 0.5);
 
-// tiltToGravity: x=gamma/30 clamped, y=beta/30 clamped
+// tiltToGravity: x=gamma/TILT_FULL_DEG clamped, y=beta/TILT_FULL_DEG clamped
 eq('tilt flat', P.tiltToGravity(0, 0), { x: 0, y: 0 });
-eq('tilt right', P.tiltToGravity(0, 30), { x: 1, y: 0 });
-eq('tilt back', P.tiltToGravity(-30, 0), { x: 0, y: -1 });
-eq('tilt clamp', P.tiltToGravity(0, 60), { x: 1, y: 0 });
-eq('tilt diag', P.tiltToGravity(15, 15), { x: 0.5, y: 0.5 });
+eq('tilt right', P.tiltToGravity(0, 60), { x: 1, y: 0 });
+eq('tilt back', P.tiltToGravity(-60, 0), { x: 0, y: -1 });
+eq('tilt clamp', P.tiltToGravity(0, 999), { x: 1, y: 0 });
+eq('tilt half', P.tiltToGravity(P.K.TILT_FULL_DEG / 2, P.K.TILT_FULL_DEG / 2), { x: 0.5, y: 0.5 });
 
 // gravityDir: unit down; flat -> {0,1}
 eq('gdir flat', P.gravityDir({ x: 0, y: 0 }), { x: 0, y: 1 });

@@ -10,7 +10,7 @@
 
   // Feel dials — tune live on a phone.
   const K = {
-    TILT_FULL_DEG: 30,    // degrees of tilt mapped to full gravity
+    TILT_FULL_DEG: 16,    // degrees of tilt mapped to full gravity (smaller = far more aggressive)
     GRAVITY_SCALE: 1600,  // px/s^2 at full tilt (splash droplets)
     RESTING_FILL: 0.7,    // pool fill once the toy wakes (slosh headroom)
     SLOSH_K: 90,          // surface spring stiffness (1/s^2)
@@ -19,8 +19,8 @@
     SPLASH_CAP: 240,      // max live splash droplets
     SPLASH_DRAG: 0.12,    // per-second droplet damping
     SPLASH_LIFE: 1.4,     // seconds
-    WIND_GAIN: 1.6,       // gravity.x -> engine wind
-    WIND_CAP: 1.8,
+    WIND_GAIN: 4.5,       // gravity.x -> engine wind (streams lean hard with tilt)
+    WIND_CAP: 5.0,
     GRAVITY_EPS: 1e-3,
     TINT: '150, 205, 235',
   };

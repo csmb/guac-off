@@ -52,13 +52,13 @@ body {
 .wf-details {
   position: relative;
   flex: 1 1 auto; min-height: 0;
-  background: #06140f; /* dark "unflooded" void shown above the waterline */
+  background: #000; /* black void — matches the fountain background */
   overflow: hidden;
 }
 
 /* the details panel itself (mirrors the homepage #info), internally scrollable */
 .wf-doc {
-  --info-bg: #1b4d3e; --info-cream: #ebd2b4; --info-orange: #ff5500;
+  --info-bg: #000; --info-cream: #ebd2b4; --info-orange: #ff5500;
   --info-pad-t: 28px; --info-pad-x: 24px; --info-pad-b: 24px;
   position: absolute; inset: 0;
   overflow-y: auto; -webkit-overflow-scrolling: touch;
