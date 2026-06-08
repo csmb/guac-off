@@ -239,9 +239,11 @@ if ('serviceWorker' in navigator) {
       window.addEventListener('deviceorientation', onOrient);
       tiltActive = true; tiltOn = true; fillTarget = restFill;
       if (tiltBtn) tiltBtn.classList.add('hide');
+      if (doc) { doc.classList.remove('wf-has-pill'); doc.scrollTop = Math.min(doc.scrollTop, Math.max(0, doc.scrollHeight - doc.clientHeight)); } // pill gone -> drop the reserved space + re-clamp
     }
     if (coarse && tiltBtn) {
       tiltBtn.classList.add('show');
+      if (doc) doc.classList.add('wf-has-pill'); // reserve room so the pill doesn't cover the footer
       tiltBtn.addEventListener('click', enableTilt);
     }
 

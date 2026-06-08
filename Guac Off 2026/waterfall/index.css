@@ -57,6 +57,7 @@ body {
   clip-path: polygon(0px 0px, 0px 0px, 0px 0px); /* hidden until the pool sim reveals it */
 }
 .wf-doc > * { max-width: 680px; margin-left: auto; margin-right: auto; width: 100%; }
+.wf-doc.wf-has-pill { padding-bottom: 72px; } /* reserve room for the floating "tap me to tilt" pill so it can't cover the footer */
 
 .info-intro { text-align: center; font-size: 50px; line-height: 1.05; font-weight: normal; }
 .info-subtitle { text-align: center; font-size: 18px; line-height: 1.2; font-style: italic; opacity: 0.9; margin-top: -14px; margin-bottom: -10px; }
