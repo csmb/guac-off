@@ -174,23 +174,27 @@ if ('serviceWorker' in navigator) {
     raf = requestAnimationFrame(frame);
 
     function onOrient(e) { gRaw = P.tiltToGravity(e.beta || 0, e.gamma || 0); }
-    let enabled = false;
+    // iOS Safari only shows the motion-permission dialog for a click/tap gesture — a
+    // pointerdown/touchstart-initiated requestPermission() silently hangs. So enable
+    // ONLY from the pill's click (matching the working /fountain/ page), and don't latch
+    // "active" until permission actually succeeds, so a denied/failed tap can retry.
+    let tiltActive = false, requesting = false;
     async function enableTilt() {
-      if (enabled || !coarse) return; enabled = true;
+      if (tiltActive || requesting || !coarse) return;
+      requesting = true;
       try {
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
           const res = await DeviceOrientationEvent.requestPermission();
-          if (res !== 'granted') { if (tiltBtn) { tiltBtn.textContent = 'motion is off'; setTimeout(function () { tiltBtn.classList.add('hide'); }, 1400); } return; }
+          if (res !== 'granted') { requesting = false; if (tiltBtn) tiltBtn.textContent = 'motion is off'; return; }
         }
-      } catch (e) { if (tiltBtn) tiltBtn.classList.add('hide'); return; }
+      } catch (e) { requesting = false; if (tiltBtn) tiltBtn.textContent = 'tap again to allow motion'; return; }
       window.addEventListener('deviceorientation', onOrient);
-      tiltOn = true; fillTarget = K.RESTING_FILL;
+      tiltActive = true; tiltOn = true; fillTarget = K.RESTING_FILL;
       if (tiltBtn) tiltBtn.classList.add('hide');
     }
     if (coarse && tiltBtn) {
       tiltBtn.classList.add('show');
       tiltBtn.addEventListener('click', enableTilt);
-      window.addEventListener('pointerdown', function () { enableTilt(); }, { once: true });
     }
 
     window.addEventListener('pagehide', function () {
