@@ -20,19 +20,19 @@ An archive of websites and tools from the annual **Guac Off** guacamole competit
 | `guac_off_2023/` | 2023 | Static HTML/CSS/JS | `index.html`, `script.js`, `style.css` |
 | `guac-game/` | 2025 | React + TypeScript + Vite | `src/`, `package.json` |
 | `guac2025/` | 2025 | Static HTML | `index.html` |
-| `Guac Off 2026/` | 2026 | Static HTML/CSS/JS | `index.html`, `index.css`, `index.js` |
+| `Guac Off 2026/` | 2026 | Static HTML/CSS/JS | `index.html` (→ waterfall homepage), `waterfall/`, `game.html` |
 | `guac_game_v2/` | 2026 | Python + Pygame | `main.py`, `requirements.txt` |
 
 ## Active / Most Recent Projects
 
-- **`Guac Off 2026/`** — Current year's event site (static HTML/CSS/JS, no build step). The landing page is the "Guac-y Road" canvas game (`game/`, ES modules). Linked from the home-page footer are several **vanilla Canvas interaction pages**, each its own folder (`index.html`/`index.css`/`index.js` + usually `helpers.js`/`helpers.test.js` + `assets/`):
+- **`Guac Off 2026/`** — Current year's event site (static HTML/CSS/JS, no build step). **The landing page (`index.html`) is now the waterfall experience** — it loads `waterfall/` via `waterfall/`-prefixed paths, so `/` and `/waterfall/` render the same thing. The old "Guac-y Road" canvas game is preserved (unlinked) at **`game.html`** (`game/` ES modules + the root `index.js`/`index.css`, which are otherwise orphaned). The homepage intentionally has **no nav links** to the other pages. Each interaction page is its own folder (`index.html`/`index.css`/`index.js` + per-page logic modules + `*.test.js` + `assets/`):
+  - `waterfall/` — **the headliner / homepage.** Live Canvas fountain streams on top; party details below auto-flood into view, then a **"tap me to tilt"** button wakes a tilt-slosh canvas pool (gentle, soft-saturated `tanh`; streams lean aggressively via the engine's `wind`; water crashes up over the fountain on a fast slosh and settles to the seam; a tappable bobbing "scroll down" button reveals more). Pure math is unit-tested across `helpers.js`/`flood.js`/`pool.js` (`node "Guac Off 2026/waterfall/<m>.test.js"`); the controller + DOM glue are in `index.js`. Spout layout is `spouts.js`. Debug/demo URL hash: `#tilt=beta,gamma[,surge]`.
   - `tilt/` — tilt the phone to roll ingredients into a bowl (Matter.js)
   - `find/` — point the phone at the party (compass + geolocation)
   - `fountain/` — tilt to pour water from the fountain, with an accumulating pool
-  - `waterfall/` — ambient photoreal water over the fountain photo (desktop-first; lighter "mobile-lite" path on touch devices)
   - `years/` — the multi-year archive gallery
 
-  Convention for these: pure logic lives in `helpers.js` as a **dual-mode (browser + Node) module**, unit-tested via `node "Guac Off 2026/<page>/helpers.test.js"`; the DOM/engine + `requestAnimationFrame` loop live in `index.js`. Device-orientation pages (`tilt`/`find`/`fountain`) reuse an iOS motion-permission flow — the click handler's **first `await` must be `DeviceOrientationEvent.requestPermission()`** (don't await anything before it, or the native prompt silently fails). Spec/plan docs for recent pages live in `docs/superpowers/{specs,plans}/`.
+  Convention for these: pure logic lives in `helpers.js` as a **dual-mode (browser + Node) module**, unit-tested via `node "Guac Off 2026/<page>/helpers.test.js"`; the DOM/engine + `requestAnimationFrame` loop live in `index.js`. Device-orientation pages (`waterfall`/`tilt`/`find`/`fountain`) reuse an iOS motion-permission flow — call `DeviceOrientationEvent.requestPermission()` **from a `click`/tap handler (NOT `pointerdown`/`touchstart` — iOS silently ignores those and the prompt never appears), and make it the first `await`** (don't await anything before it). Spec/plan docs for recent pages live in `docs/superpowers/{specs,plans}/`.
 - **`guac_game_v2/`** — Python/Pygame point-and-click adventure game (metal theme). Run with `python main.py` after `pip install -r requirements.txt`.
 - **`guac-game/`** — Browser-based React game. Dev: `cd guac-game && npm run dev`. Build: `npm run build`.
 
