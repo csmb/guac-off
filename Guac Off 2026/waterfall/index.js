@@ -146,7 +146,8 @@ if ('serviceWorker' in navigator) {
           surfPts = [];
           for (let k = 0; k <= SEG; k++) {
             const t = k / SEG;
-            const w = K.WAVE_AMP * Math.sin(t * K.WAVE_FREQ * 6.2832 + wavePhase) + K.WAVE_AMP2 * Math.sin(t * K.WAVE_FREQ2 * 6.2832 - wavePhase * 1.3);
+            const mid = Math.sin(t * Math.PI); // 0 at the walls, peaks mid-pool
+            const w = (K.WAVE_AMP * Math.sin(t * K.WAVE_FREQ * 6.2832 + wavePhase) + K.WAVE_AMP2 * Math.sin(t * K.WAVE_FREQ2 * 6.2832 - wavePhase * 1.3)) * (K.WAVE_EDGE + (1 - K.WAVE_EDGE) * mid) + K.WAVE_MID * mid * mid * Math.sin(t * K.WAVE_MID_FREQ * 6.2832 + wavePhase * 1.7);
             surfPts.push({ x: A.x + dx * t + nx * w, y: A.y + dy * t + ny * w });
           }
         }

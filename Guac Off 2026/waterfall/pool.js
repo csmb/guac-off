@@ -30,6 +30,9 @@
     WAVE_FREQ: 2.4,       // primary ripples across the surface
     WAVE_FREQ2: 4.3,      // secondary ripple count
     WAVE_SPEED: 1.7,      // ripple drift speed
+    WAVE_EDGE: 0.5,       // base-ripple amplitude at the walls (1 = full) — ripples taper toward the edges
+    WAVE_MID: 1.8,        // extra chop concentrated in the middle of the pool (px)
+    WAVE_MID_FREQ: 3.3,   // frequency of the mid-pool chop
     TINT: '150, 205, 235',
   };
 
