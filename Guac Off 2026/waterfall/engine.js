@@ -208,10 +208,11 @@
       const segs = 14;
       const wTop = s.w * 0.82, wBot = Math.max(4, s.w * 0.34);
       const tw = time * 0.004;
+      const sway = (s.wobble == null ? 1 : s.wobble); // 0 = sheet follows the droplets exactly (no swing that reads as a guide-line)
       function pt(f) {
         const t = f * tFall;
         const x = s.x + s.lean * t + 0.5 * wind * K.WIND_COEFF * t * t
-          + Math.sin(tw + f * 3.4 + s.x * 0.01) * (1.5 + f * f * 9);
+          + Math.sin(tw + f * 3.4 + s.x * 0.01) * (1.5 + f * f * 9) * sway;
         const y = y0 + v0 * t + 0.5 * K.GRAV * t * t;
         return [x, y];
       }

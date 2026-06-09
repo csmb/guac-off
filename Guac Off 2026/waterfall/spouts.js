@@ -10,7 +10,7 @@ window.WaterfallSpouts = [
   { id: 'BL', kind: 'fall', x: 238,  y: 648, w: 30, v0: 2.0, lean: -3.2,  splashY: 812, on: true },
   { id: 'L',  kind: 'fall', x: 462,  y: 480, w: 42, v0: 4.6, lean: -0.30, splashY: 804, on: true },
   { id: 'H',  kind: 'fall', x: 842,  y: 440, w: 19, v0: 3.0, lean: -1.15, splashY: 566, on: true, behind: true },
-  { id: 'DH', kind: 'fall', x: 1248, y: 312, w: 20, v0: 3.0, lean: -0.55, splashY: 884, on: true, spine: false }, // no bright centerline (its swing read as a guide-line)
+  { id: 'DH', kind: 'fall', x: 1248, y: 312, w: 20, v0: 3.0, lean: -0.55, splashY: 884, on: true, spine: false, wobble: 0 }, // no centerline + sheet follows the droplets (the sway read as a swinging guide-line)
   { id: 'D',  kind: 'fall', x: 1118, y: 716, w: 16, v0: 5.2, lean:  0.10, splashY: 802, on: true },
   { id: 'R',  kind: 'fall', x: 1500, y: 716, w: 34, v0: 4.8, lean:  0.08, splashY: 816, on: true },
 ];
