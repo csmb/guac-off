@@ -93,6 +93,7 @@ body {
 }
 .wf-back { text-align: center; }
 .wf-back a { color: #7cb342; text-decoration: none; font-size: 0.9rem; }
+.footer-email { display: inline-block; margin-top: 6px; font-family: var(--font-body); font-size: 12px; letter-spacing: 0.3px; color: #8bc34a; text-decoration: none; }
 
 /* tighter on phones so the first screenful of details reads well */
 @media (max-width: 480px) {
