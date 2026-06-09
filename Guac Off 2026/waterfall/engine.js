@@ -239,6 +239,7 @@
         g.addColorStop(1, tint(0.05 * CFG.flow));
       }
       ctx.fillStyle = g; ctx.fill();
+      if (s.spine === false) return; // skip the bright centerline — its animated swing reads as a guide-line on long streams
       ctx.beginPath();
       for (let i = 0; i <= segs; i++) { const f = i / segs, p = pt(f); i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]); }
       g = ctx.createLinearGradient(0, y0, 0, y1);
