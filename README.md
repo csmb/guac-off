@@ -9,6 +9,7 @@ An archive of code from many years of the **Guac Off** — an annual guacamole c
 | `missionguacparty2012` | 2012 | Ruby on Rails | Event website for the first Mission Guac Party |
 | `Guac2013` | 2013 | Sinatra | Lightweight event site with attendee signup |
 | `guac` | 2013 | Ruby on Rails | Full Rails event app |
+| `missionguacparty2013` | 2013 | Sinatra | Event site with attendee signup and SQLite RSVP store |
 | `missionguacparty2014` | 2014 | Sinatra | Event site with email integration and attendee model |
 | `missionguacparty2016` | 2016 | Rack | Static-served event site |
 | `guac-voting-2017` | 2017 | Ruby script | Vote tabulator — scores entries across 5 judging categories |
@@ -20,4 +21,4 @@ An archive of code from many years of the **Guac Off** — an annual guacamole c
 
 ## Guac Off Through the Years
 
-`Guac Off 2026/years/` is a browsable "Guac Off Through the Years" archive — a gallery of self-contained, offline snapshots covering 14 years (2012–2026, no 2014), built from Wayback Machine captures plus local sources. It's reachable from the 2026 home page and at `/years/`.
+`Guac Off 2026/years/` is a browsable "Guac Off Through the Years" archive — a gallery of self-contained, offline snapshots covering 15 years (2012–2026), built from Wayback Machine captures plus local sources. It's reachable from the 2026 home page and at `/years/`.
