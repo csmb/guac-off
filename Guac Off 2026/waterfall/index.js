@@ -80,15 +80,24 @@ if ('serviceWorker' in navigator) {
     // full-page sim so water can crash UP past the seam (over the fountain), then settle to it
     let W = 0, H = 0, seamY = 0, detailsH = 0, restFill = 1;
     const stage = document.querySelector('.wf-stage');
+    const frameEl = document.querySelector('.frame');
+    const FRAME_AR = window.WaterfallHelpers.K.IMG_W / window.WaterfallHelpers.K.IMG_H;
     let stageLockH = null, lockW = -1; // lock the fountain height so a changing URL bar can't push the seam (and resting waterline) down
+    let lastFrameW = -1;
     function sizePool() {
       const vv = window.visualViewport;
+      if (vv && P.isZoomed(vv.scale)) return; // pinch-zoom reports zoomed dimensions — keep the last good layout (zooming back out fires another resize)
       W = vv ? vv.width : window.innerWidth;
       H = vv ? vv.height : window.innerHeight;     // the actually-visible height (excludes the mobile URL bar)
       document.body.style.height = H + 'px';       // pin the page to the visible viewport so the details don't run below the fold (scroll stops at the footer)
       if (stage) { // lock the fountain/seam to a fixed px height per orientation, so the URL bar growing dvh can't push the resting waterline down
         if (lockW !== W) { lockW = W; stage.style.flexBasis = ''; stage.style.height = ''; stageLockH = Math.round(stage.getBoundingClientRect().height); }
-        stage.style.flexBasis = stageLockH + 'px'; stage.style.height = stageLockH + 'px';
+        const stageH = P.clampStage(stageLockH, H); // a height-only shrink (split view, desktop resize) must not starve the details below the lock
+        stage.style.flexBasis = stageH + 'px'; stage.style.height = stageH + 'px';
+        if (frameEl) { // px-lock the frame width too — its 45dvh CSS width would still track the URL bar inside the locked stage
+          const fw = P.frameWidth(W, stageH, FRAME_AR);
+          if (fw !== lastFrameW) { lastFrameW = fw; frameEl.style.width = fw + 'px'; if (wf && wf.resize) wf.resize(); }
+        }
       }
       pool.style.width = W + 'px'; pool.style.height = H + 'px'; // match display size to the backing store -> no vertical stretch
       const r = details.getBoundingClientRect();
@@ -109,7 +118,7 @@ if ('serviceWorker' in navigator) {
     let wavePhase = 0;  // animates the surface ripples
     let tiltOn = false;
     let surge = 0;                      // transient crash-up above the seam, driven by slosh speed
-    let fill = 0, fillTarget = 1;       // intro fills to the seam
+    let fill = 0;                       // intro fills to the seam
     const FILL_MS = 5000;
     let startT = 0;
     const SPLASH = [];
@@ -117,7 +126,7 @@ if ('serviceWorker' in navigator) {
     // optional debug/demo: #tilt=beta,gamma forces a tilt (no device needed)
     const th = location.hash.match(/\btilt=(-?[\d.]+),(-?[\d.]+)(?:,(-?[\d.]+))?/);
     let forceSurge = null;
-    if (th) { rawGamma = parseFloat(th[2]); sGamma = rawGamma; tiltOn = true; fill = restFill; fillTarget = restFill; if (th[3] != null) forceSurge = parseFloat(th[3]); }
+    if (th) { rawGamma = parseFloat(th[2]); sGamma = rawGamma; tiltOn = true; fill = restFill; if (th[3] != null) forceSurge = parseFloat(th[3]); }
 
     function spawnSplashes(n) {
       const dy = surf.dir.y || 1;
@@ -196,7 +205,7 @@ if ('serviceWorker' in navigator) {
       if (!startT) startT = now;
       if (reduce && !tiltOn) fill = restFill;
       else if (!tiltOn) fill = restFill * (window.WaterfallFlood ? window.WaterfallFlood.floodLevel(now - startT, FILL_MS) : 1);
-      else fill += (fillTarget - fill) * Math.min(1, dt * 3);
+      else fill = P.fillToward(fill, restFill, dt); // live restFill: the resting waterline must track the seam through URL-bar/rotation resizes
 
       // smooth the raw left/right tilt; streams & pool read it with DIFFERENT sensitivity
       sGamma += ((tiltOn ? rawGamma : 0) - sGamma) * Math.min(1, dt * 5);
@@ -228,7 +237,11 @@ if ('serviceWorker' in navigator) {
     }
     raf = requestAnimationFrame(frame);
 
-    function onOrient(e) { rawGamma = e.gamma || 0; }
+    function screenAngle() { // window.orientation first — screenGamma's remap table is anchored to its semantics (iOS keeps it)
+      if (typeof window.orientation === 'number') return window.orientation;
+      return (window.screen && screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : 0;
+    }
+    function onOrient(e) { rawGamma = P.screenGamma(e.beta || 0, e.gamma || 0, screenAngle()); }
     // iOS Safari only shows the motion-permission dialog for a click/tap gesture — a
     // pointerdown/touchstart-initiated requestPermission() silently hangs. So enable
     // ONLY from the pill's click (matching the working /fountain/ page), and don't latch
@@ -244,7 +257,7 @@ if ('serviceWorker' in navigator) {
         }
       } catch (e) { requesting = false; if (tiltBtn) tiltBtn.textContent = 'tap again to allow motion'; return; }
       window.addEventListener('deviceorientation', onOrient);
-      tiltActive = true; tiltOn = true; fillTarget = restFill;
+      tiltActive = true; tiltOn = true;
       if (tiltBtn) tiltBtn.classList.add('hide');
       if (doc) { doc.classList.remove('wf-has-pill'); doc.scrollTop = Math.min(doc.scrollTop, Math.max(0, doc.scrollHeight - doc.clientHeight)); } // pill gone -> drop the reserved space + re-clamp
     }
@@ -271,13 +284,14 @@ if ('serviceWorker' in navigator) {
       });
     }
 
-    window.addEventListener('pagehide', function () {
+    window.addEventListener('pagehide', function (e) {
+      if (e.persisted) return; // bfcache: stay armed so a Back-button restore resumes live (rAF freezes with the page; dt is clamped on resume)
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', sizePool);
       window.removeEventListener('deviceorientation', onOrient);
     });
   })();
 
-  // lifecycle: tear the engine down when the page is hidden/unloaded
-  window.addEventListener('pagehide', function () { wf.destroy(); });
+  // lifecycle: tear the engine down on real unloads only — a bfcache restore must come back live
+  window.addEventListener('pagehide', function (e) { if (!e.persisted) wf.destroy(); });
 })();

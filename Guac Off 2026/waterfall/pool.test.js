@@ -60,5 +60,43 @@ eq('clip empty hidden', P.pointsToClipPath([]), 'polygon(0px 0px, 0px 0px, 0px 0
 eq('clip triangle', P.pointsToClipPath([{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 0, y: 10 }]),
    'polygon(0px 0px, 10px 0px, 0px 10px)');
 
+// --- view/layout helpers ---
+// run(): report a missing/throwing helper as a failed assertion instead of crashing the runner
+function run(fn) { try { return fn(); } catch (e) { return String(e); } }
+
+// screenGamma: device (beta,gamma) -> screen-relative left/right tilt for a rotated screen.
+// Anchored to window.orientation semantics: 0 portrait, 90 rotated CCW (iOS home-right), 270/-90 rotated CW.
+eq('screenGamma portrait passes gamma', run(() => P.screenGamma(30, 10, 0)), 10);
+eq('screenGamma landscape 90 uses beta', run(() => P.screenGamma(30, 10, 90)), 30);
+eq('screenGamma inverted negates gamma', run(() => P.screenGamma(30, 10, 180)), -10);
+eq('screenGamma landscape 270 negates beta', run(() => P.screenGamma(30, 10, 270)), -30);
+eq('screenGamma accepts -90 like 270', run(() => P.screenGamma(30, 10, -90)), -30);
+eq('screenGamma no angle -> portrait', run(() => P.screenGamma(30, 10, undefined)), 10);
+
+// fillToward: tilted-mode fill lerp toward the CURRENT rest level (regression: stale fillTarget
+// captured at tilt-enable stranded the waterline after a URL-bar/rotation resize)
+eq('fillToward moves toward target', run(() => P.fillToward(0, 1, 0.1)), 0.3, 1e-9);
+eq('fillToward big dt snaps to target', run(() => P.fillToward(0.2, 0.9, 1)), 0.9, 1e-9);
+eq('fillToward dt=0 unchanged', run(() => P.fillToward(0.4, 0.9, 0)), 0.4, 1e-9);
+let fl = 0.548; // rest level changes mid-flight (0.548 -> 0.592, the URL-bar scenario) => must converge to the NEW level
+for (let i = 0; i < 200; i++) fl = P.fillToward ? P.fillToward(fl, 0.592, 0.016) : NaN;
+eq('fillToward converges to a changed rest level', fl, 0.592, 1e-3);
+
+// clampStage: applied stage height must leave room for the details on short viewports
+eq('clampStage keeps the lock when there is room', run(() => P.clampStage(405, 900)), 405);
+eq('clampStage caps at STAGE_MAX_FRAC of the visible height', run(() => P.clampStage(405, 420)), 252);
+eq('clampStage exact boundary keeps the lock', run(() => P.clampStage(405, 675)), 405);
+eq('clampStage rounds the cap', run(() => P.clampStage(500, 601)), 361);
+
+// isZoomed: a pinch-zoomed visualViewport must not drive relayout
+eq('isZoomed unzoomed', run(() => P.isZoomed(1)), false);
+eq('isZoomed missing scale', run(() => P.isZoomed(undefined)), false);
+eq('isZoomed jitter tolerated', run(() => P.isZoomed(1.005)), false);
+eq('isZoomed pinch', run(() => P.isZoomed(2)), true);
+
+// frameWidth: fountain frame sized from the LOCKED stage height (not dvh), capped by the viewport
+eq('frameWidth height-limited', run(() => P.frameWidth(1200, 405, 2034 / 1136)), 725);
+eq('frameWidth viewport-capped', run(() => P.frameWidth(390, 405, 2034 / 1136)), 390);
+
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

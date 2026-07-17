@@ -1,6 +1,6 @@
 'use strict';
 // Waterfall simulation engine — ported from docs/design_handoff_waterfall/waterfall.js.
-// Factory: createWaterfall({ canvas, config, spouts }) -> { destroy }.
+// Factory: createWaterfall({ canvas, config, spouts }) -> { destroy, resize }.
 // All physics authored in image space (2034x1136), scaled to the canvas each frame.
 (function () {
   const H = window.WaterfallHelpers;
@@ -379,7 +379,7 @@
       canvas.removeEventListener('click', onClick);
       window.removeEventListener('resize', resize);
     }
-    return { destroy: destroy };
+    return { destroy: destroy, resize: resize };
   }
 
   window.createWaterfall = createWaterfall;

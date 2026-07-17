@@ -34,6 +34,8 @@
     WAVE_MID: 1.8,        // extra chop concentrated in the middle of the pool (px)
     WAVE_MID_FREQ: 3.3,   // frequency of the mid-pool chop
     TINT: '150, 205, 235',
+    FILL_LERP: 3,         // tilted-mode fill approach rate (1/s toward the rest level)
+    STAGE_MAX_FRAC: 0.6,  // the locked stage may take at most this fraction of the visible height
   };
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
@@ -96,5 +98,41 @@
     return 'polygon(' + pts.join(', ') + ')';
   }
 
-  return { K, clamp, surfaceLevel, clipRectBelow, integrate, sloshStep, splashCount, pointsToClipPath };
+  // --- view/layout helpers ---
+
+  // Device-frame (beta,gamma) -> screen-relative left/right tilt (deg) for a rotated screen.
+  // Anchored to window.orientation semantics: 0 portrait, 90 rotated CCW (iOS home-right),
+  // 180 inverted, 270 (or -90) rotated CW. Unknown angles fall back to portrait.
+  function screenGamma(beta, gamma, angle) {
+    const a = (((angle || 0) % 360) + 360) % 360;
+    if (a === 90) return beta;
+    if (a === 180) return -gamma;
+    if (a === 270) return -beta;
+    return gamma;
+  }
+
+  // Tilted-mode fill lerp. Must be fed the LIVE rest level every frame so viewport
+  // changes (URL bar, rotation) can't strand the waterline at a stale target.
+  function fillToward(fill, target, dt) {
+    return fill + (target - fill) * Math.min(1, dt * K.FILL_LERP);
+  }
+
+  // Applied stage height: honor the per-orientation px lock, but never starve the
+  // details section when the visible height shrinks (split view, desktop resize).
+  function clampStage(lockH, h) {
+    return Math.min(lockH, Math.round(h * K.STAGE_MAX_FRAC));
+  }
+
+  // A pinch-zoomed visualViewport reports zoomed dimensions — not layout input.
+  function isZoomed(scale) {
+    return typeof scale === 'number' && scale > 1.01;
+  }
+
+  // Fountain frame width from the LOCKED stage height (keeps the art's aspect), viewport-capped.
+  function frameWidth(w, stageH, aspect) {
+    return Math.round(Math.min(w, stageH * aspect));
+  }
+
+  return { K, clamp, surfaceLevel, clipRectBelow, integrate, sloshStep, splashCount, pointsToClipPath,
+           screenGamma, fillToward, clampStage, isZoomed, frameWidth };
 });
