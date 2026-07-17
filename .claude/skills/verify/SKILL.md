@@ -33,4 +33,5 @@ cd "Guac Off 2026" && python3 -m http.server 8086 --bind 127.0.0.1
 
 - rAF runs in real time headless — wait ~6s for the 5s flood before asserting reveal state.
 - The node suites (`node "Guac Off 2026/waterfall/"*.test.js`) are CI, not verification — drive the page.
-- bfcache restores can't be driven headless; the `pagehide` `e.persisted` branches need a real-device check.
+- bfcache CAN be driven headless: `Page.navigate` away, then `Page.navigateToHistoryEntry` back; instrument `pageshow`/`pagehide` with `e.persisted` beforehand (state surviving the round-trip proves a real cache hit).
+- Liveness probes: screenshot diffs LIE (the scroll button's infinite CSS bob animates even on a dead page), and Chrome may blank 2D canvases once across a bfcache restore. Hash canvas pixel bands via `getImageData` — water canvas at ~35% height (falling streams), pool canvas at ~43% (waving waterline stroke) — take 4 samples 400ms apart and require sustained change (≥2 of 3 intervals), after a ~2.5s post-restore settle.
