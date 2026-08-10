@@ -71,7 +71,7 @@ body {
 }
 .info-essentials dd { margin: 0; align-self: center; }
 
-.info-schedule h3, .info-awards h3 {
+.info-schedule h3, .info-awards h3, .info-sponsors h3 {
   font-family: var(--font-title); font-size: 12px; color: var(--info-orange);
   letter-spacing: 2px; margin-bottom: 10px; text-align: center; font-weight: normal;
 }
@@ -86,11 +86,33 @@ body {
 .chips { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 10px; justify-content: center; }
 .chips li { border: 2px solid var(--info-orange); border-radius: 999px; padding: 2px 10px; font-size: 13px; line-height: 1.25; color: var(--info-cream); }
 
+/* ===== sponsors ===== */
+.info-sponsors h3 { font-size: 10px; }
+.sponsor-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.sponsor-list a {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 2px solid var(--info-orange); border-radius: 10px; padding: 10px 18px;
+  color: var(--info-cream); text-decoration: none;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+.sponsor-list a:hover, .sponsor-list a:focus-visible { background: var(--info-orange); transform: translateY(-2px); }
+.sponsor-name { font-family: var(--font-title); font-size: 12px; letter-spacing: 1px; line-height: 1.2; }
+.sponsor-note { font-size: 16px; line-height: 1.1; opacity: 0.85; }
+
 #info-footer {
   text-align: center; font-family: var(--font-title); font-size: 7px; letter-spacing: 2px;
   color: var(--info-cream); opacity: 0.65; padding-top: 8px;
   border-top: 1px dashed rgba(235, 210, 180, 0.3);
 }
+/* "Since 2012" → the 15-year archive; padded so it's tappable at 7px pixel type */
+.footer-years {
+  display: inline-block; padding: 4px 2px; margin: -4px 0;
+  color: inherit; text-decoration: none;
+  border-bottom: 1px dashed rgba(235, 210, 180, 0.5);
+  transition: color 180ms ease, border-color 180ms ease;
+}
+.footer-years:hover, .footer-years:focus-visible { color: var(--info-orange); border-bottom-color: var(--info-orange); }
+
 .wf-back { text-align: center; }
 .wf-back a { color: #7cb342; text-decoration: none; font-size: 0.9rem; }
 .footer-email { display: inline-block; margin-top: 6px; font-family: var(--font-body); font-size: 12px; letter-spacing: 0.3px; color: #8bc34a; text-decoration: none; }
@@ -102,10 +124,14 @@ body {
   .info-subtitle { font-size: 14px; margin-top: -8px; margin-bottom: -7px; }
   .info-essentials { font-size: 17px; gap: 5px 12px; }
   .info-essentials dt { font-size: 9px; padding: 3px 8px; }
-  .info-schedule h3, .info-awards h3 { font-size: 10px; margin-bottom: 6px; }
+  .info-schedule h3, .info-awards h3, .info-sponsors h3 { font-size: 10px; margin-bottom: 6px; }
   .info-schedule ol { font-size: 15px; column-gap: 14px; }
   .chips { gap: 5px 7px; }
   .chips li { font-size: 11px; padding: 1px 8px; }
+  .sponsor-list { gap: 8px; }
+  .sponsor-list a { padding: 8px 14px; }
+  .sponsor-name { font-size: 10px; }
+  .sponsor-note { font-size: 14px; }
 }
 
 /* tappable "scroll down for more" button — shown while the details panel can scroll further */
