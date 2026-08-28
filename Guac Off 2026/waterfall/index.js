@@ -46,6 +46,9 @@ if ('serviceWorker' in navigator) {
     config.maxStream = 2200;   // bound worst-case draw calls
     config.maxSplash = 900;
   }
+  // Desktop: cap the retina backing store at 1.5x. Full 2x DPR quadruples fill-rate for a
+  // near-imperceptible sharpness gain on this soft, translucent water — a big sustained-GPU win.
+  if (!coarse && config.dprCap == null) config.dprCap = 1.5;
 
   const canvas = document.getElementById('water');
   const spouts = window.WaterfallSpouts;
@@ -65,7 +68,7 @@ if ('serviceWorker' in navigator) {
   // --- tilt-slosh pool: canvas water + per-frame polygon reveal, steered by gravity ---
   // Flat phone => a level waterline rising over ~5s (the old flood); tilt => the pool
   // sloshes, the reveal follows, the streams lean (engine wind), and spray flies.
-  (function setupPool() {
+  const poolCtl = (function setupPool() {
     const details = document.getElementById('wf-details');
     const doc = details && details.querySelector('.wf-doc');
     const pool = document.getElementById('pool');
@@ -103,7 +106,7 @@ if ('serviceWorker' in navigator) {
       const r = details.getBoundingClientRect();
       seamY = r.top; detailsH = r.height;
       restFill = Math.max(0, Math.min(1, 1 - seamY / H)); // resting waterline sits at the seam (event top)
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5); // match the engine's desktop cap — halve fill-rate vs full retina
       pool.width = Math.round(W * dpr); pool.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (doc) doc.scrollTop = Math.min(doc.scrollTop, Math.max(0, doc.scrollHeight - doc.clientHeight)); // never leave the panel scrolled past its content (no empty space below the footer)
@@ -199,8 +202,12 @@ if ('serviceWorker' in navigator) {
       }
     }
 
-    let last = performance.now(), raf = 0;
+    let last = performance.now(), raf = 0, poolRunning = false;
+    const POOL_MIN_DT = 24; // throttle the pool/waterline redraw to ~30fps — halves this canvas's fill-rate; the ripple stays smooth enough
     function frame(now) {
+      if (!poolRunning) return;
+      raf = requestAnimationFrame(frame);
+      if (now - last < POOL_MIN_DT) return; // 30fps gate: skip roughly every other 60fps tick
       let dt = (now - last) / 1000; last = now; if (dt > 0.05) dt = 0.05;
       if (!startT) startT = now;
       if (reduce && !tiltOn) fill = restFill;
@@ -233,9 +240,10 @@ if ('serviceWorker' in navigator) {
       const levelD = level - seamY * surf.dir.y;                    // same surface, expressed in details-local space
       doc.style.clipPath = P.pointsToClipPath(P.clipRectBelow(W, detailsH, surf.dir, levelD)); // reveal follows the surface
       draw(poly);
-      raf = requestAnimationFrame(frame);
     }
-    raf = requestAnimationFrame(frame);
+    function poolResume() { if (poolRunning) return; poolRunning = true; last = performance.now(); raf = requestAnimationFrame(frame); }
+    function poolPause() { poolRunning = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+    poolResume();
 
     function screenAngle() { // window.orientation first — screenGamma's remap table is anchored to its semantics (iOS keeps it)
       if (typeof window.orientation === 'number') return window.orientation;
@@ -290,8 +298,44 @@ if ('serviceWorker' in navigator) {
       window.removeEventListener('resize', sizePool);
       window.removeEventListener('deviceorientation', onOrient);
     });
+
+    return { pause: poolPause, resume: poolResume, splashCount: function () { return SPLASH.length; } };
   })();
 
   // lifecycle: tear the engine down on real unloads only — a bfcache restore must come back live
   window.addEventListener('pagehide', function (e) { if (!e.persisted) wf.destroy(); });
+
+  // Stop pegging the GPU when nobody's looking: pause both render loops while the tab is
+  // hidden or the hero canvas is scrolled out of view; resume (with a clamped dt) on return.
+  (function setupIdleControl() {
+    let heroVisible = true;
+    function apply() {
+      const active = heroVisible && !document.hidden;
+      if (active) { wf.resume(); if (poolCtl) poolCtl.resume(); }
+      else { wf.pause(); if (poolCtl) poolCtl.pause(); }
+    }
+    document.addEventListener('visibilitychange', apply);
+    if ('IntersectionObserver' in window && canvas) {
+      new IntersectionObserver(function (es) { heroVisible = es[es.length - 1].isIntersecting; apply(); }, { threshold: 0 }).observe(canvas);
+    }
+  })();
+
+  // #debug — live fps / JS-heap / particle-count overlay, to confirm the load drops and memory flattens.
+  if (location.hash.indexOf('debug') >= 0) {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;top:8px;left:8px;z-index:99999;font:12px/1.45 ui-monospace,monospace;background:rgba(0,0,0,.62);color:#5f6;padding:7px 9px;border-radius:7px;white-space:pre;pointer-events:none';
+    document.body.appendChild(el);
+    let pf = 0, pt = performance.now();
+    setInterval(function () {
+      const s = wf.stats ? wf.stats() : { frames: 0, stream: 0, mist: 0, splash: 0, ripples: 0 };
+      const now = performance.now();
+      const fps = Math.round((s.frames - pf) * 1000 / Math.max(1, now - pt)); pf = s.frames; pt = now;
+      const mem = (window.performance && performance.memory && performance.memory.usedJSHeapSize)
+        ? (performance.memory.usedJSHeapSize / 1048576).toFixed(1) + ' MB' : 'n/a';
+      const poolN = (poolCtl && poolCtl.splashCount) ? poolCtl.splashCount() : 0;
+      el.textContent = 'fps    ' + fps + '\nheap   ' + mem +
+        '\nstream ' + s.stream + '   mist ' + s.mist +
+        '\nsplash ' + s.splash + '   ripple ' + s.ripples + '\npool   ' + poolN;
+    }, 500);
+  }
 })();

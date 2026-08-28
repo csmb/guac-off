@@ -359,6 +359,8 @@
     // ---- main loop ----
     let last = performance.now();
     let rafId = 0;
+    let running = false;
+    let frames = 0; // exposed via stats() for the #debug fps/leak readout
     function frame(now) {
       let dtMs = now - last; last = now;
       if (dtMs > 60) dtMs = 60; // clamp after tab-away
@@ -366,20 +368,25 @@
       for (const s of SPOUTS) spawnStream(s, dt);
       update(dt);
       render(now);
+      frames++;
       rafId = requestAnimationFrame(frame);
     }
+    // pause/resume so we can stop pegging the GPU when nobody's looking (hidden tab / hero off-screen)
+    function resume() { if (running) return; running = true; last = performance.now(); rafId = requestAnimationFrame(frame); }
+    function pause() { if (!running) return; running = false; if (rafId) cancelAnimationFrame(rafId); rafId = 0; }
+    function stats() { return { frames: frames, stream: stream.length, mist: mist.length, splash: splash.length, ripples: ripples.length }; }
 
     resize();
-    rafId = requestAnimationFrame(frame);
+    resume();
 
     function destroy() {
-      cancelAnimationFrame(rafId);
+      pause();
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerleave', onLeave);
       canvas.removeEventListener('click', onClick);
       window.removeEventListener('resize', resize);
     }
-    return { destroy: destroy, resize: resize };
+    return { destroy: destroy, resize: resize, pause: pause, resume: resume, stats: stats };
   }
 
   window.createWaterfall = createWaterfall;
